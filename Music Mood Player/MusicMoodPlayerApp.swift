@@ -11,7 +11,7 @@ import SwiftUI
 struct MusicMoodPlayerApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MoodHomeView()
         }
     }
 }
