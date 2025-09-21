@@ -88,36 +88,55 @@ private struct MoodCarousel: View {
     @Binding var selectedMood: Mood?
     
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: true) {
-            HStack(spacing: 16) {
-                ForEach(moods) { mood in
-                    VStack {
-                        Text(mood.emoji)
-                            .font(.system(size: 44))
-                            .padding()
-                            .background(
-                                Circle()
-                                    .fill(selectedMood?.id == mood.id ? .white.opacity(0.3) : .white.opacity(0.15))
-                            )
-                            .overlay(
-                                Circle()
-                                    .stroke(selectedMood?.id == mood.id ? .white : .clear, lineWidth: 2)
-                            )
-                            .onTapGesture {
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                    selectedMood = mood
-                                }
+        GeometryReader { geo in
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .center, spacing: 18) {
+                        ForEach(moods) { mood in
+                            VStack(spacing: 16) {
+                                let isSelected = selectedMood?.id == mood.id
+                                Text(mood.emoji)
+                                    .font(.system(size: isSelected ? 38 : 34))
+                                    .padding(12)
+                                    .background(
+                                        Circle()
+                                            .fill(isSelected ? .white.opacity(0.35) : .white.opacity(0.15))
+                                    )
+                                    .overlay(
+                                        Circle()
+                                            .stroke(isSelected ? .white : .clear, lineWidth: 3)
+                                    )
+                                    .shadow(color: isSelected ? .white.opacity(0.8) : .clear, radius: 10)
+                                    .scaleEffect(isSelected ? 1.2 : 1.0)
+                                    .onTapGesture {
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                            selectedMood = mood
+                                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                            proxy.scrollTo(mood.id, anchor: .center)
+                                        }
+                                    }
+                                
+                                Text(mood.label)
+                                    .font(.headline)
+                                    .foregroundColor(.white.opacity(0.9))
                             }
-                        
-                        Text(mood.label)
-                            .font(.headline)
-                            .foregroundColor(.white.opacity(0.9))
+                            .id(mood.id)
+                        }
+                    }
+                    .frame(maxHeight: .infinity)
+                    .padding(.horizontal, geo.size.width / 2 - 35)
+                }
+                .scrollTargetBehavior(.viewAligned)
+                .onAppear {
+                    moods.first.map { first in
+                        selectedMood = first
+                        DispatchQueue.main.async {
+                            proxy.scrollTo(first.id, anchor: .center)
+                        }
                     }
                 }
             }
-            .padding(.bottom, 16)
         }
-        .frame(height: 110)
     }
 }
 
@@ -131,7 +150,7 @@ private struct InputCard: View {
     let onTogglePlaylists: () -> Void
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 0) {
             Text("How are you feeling today?")
                 .font(.title3.bold())
                 .foregroundColor(.white.opacity(0.9))
@@ -149,9 +168,9 @@ private struct InputCard: View {
                     .foregroundColor(.white)
                     .cornerRadius(14)
                     .shadow(radius: 6)
-                    .scaleEffect(showPlaylists ? 1.05 : 1.0)
             }
         }
+        .frame(minHeight: 200, maxHeight: 230)
         .padding(.horizontal, 24)
         .padding(.vertical, 20)
         .background(.ultraThinMaterial)
