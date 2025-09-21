@@ -9,11 +9,9 @@ import SwiftUI
 
 struct MoodHomeView: View {
     @StateObject private var viewModel = MoodHomeViewModel()
-    @FocusState private var isTextFieldFocused: Bool
-    @Namespace private var animation
     
     var body: some View {
-        BackgroundView(focusState: _isTextFieldFocused) {
+        BackgroundView {
             VStack(spacing: 25) {
                 TitleView()
                     .padding(.top, 50)
@@ -21,11 +19,10 @@ struct MoodHomeView: View {
                 Spacer()
                 
                 InputCard(
-                    moodText: $viewModel.moodText,
+                    moods: viewModel.moods,
                     showPlaylists: $viewModel.showPlaylists,
-                    isTextFieldFocused: _isTextFieldFocused,
+                    selectedMood: $viewModel.selectedMood,
                     onTogglePlaylists: {
-                        isTextFieldFocused = false
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                             viewModel.togglePlaylists()
                         }
@@ -35,7 +32,7 @@ struct MoodHomeView: View {
                 
                 Spacer()
                 
-                SuggestedPlaylistsSection(showPlaylists: viewModel.showPlaylists, animation: animation)
+                SuggestedPlaylistsSection(showPlaylists: viewModel.showPlaylists)
                     .padding(.bottom, 40)
             }
         }
@@ -44,7 +41,7 @@ struct MoodHomeView: View {
 
 private struct BackgroundView<Content: View>: View {
     @FocusState var focusState: Bool
-
+    
     let content: () -> Content
     
     var body: some View {
@@ -86,9 +83,49 @@ private struct TitleView: View {
     }
 }
 
+private struct MoodCarousel: View {
+    let moods: [Mood]
+    @Binding var selectedMood: Mood?
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: true) {
+            HStack(spacing: 16) {
+                ForEach(moods) { mood in
+                    VStack {
+                        Text(mood.emoji)
+                            .font(.system(size: 44))
+                            .padding()
+                            .background(
+                                Circle()
+                                    .fill(selectedMood?.id == mood.id ? .white.opacity(0.3) : .white.opacity(0.15))
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(selectedMood?.id == mood.id ? .white : .clear, lineWidth: 2)
+                            )
+                            .onTapGesture {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                    selectedMood = mood
+                                }
+                            }
+                        
+                        Text(mood.label)
+                            .font(.headline)
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                }
+            }
+            .padding(.bottom, 16)
+        }
+        .frame(height: 110)
+    }
+}
+
 private struct InputCard: View {
-    @Binding var moodText: String
+    let moods: [Mood]
+    
     @Binding var showPlaylists: Bool
+    @Binding var selectedMood: Mood?
     @FocusState var isTextFieldFocused: Bool
     
     let onTogglePlaylists: () -> Void
@@ -99,20 +136,7 @@ private struct InputCard: View {
                 .font(.title3.bold())
                 .foregroundColor(.white.opacity(0.9))
             
-            TextField("Type your mood...", text: $moodText)
-                .padding()
-                .background(.ultraThinMaterial)
-                .cornerRadius(14)
-                .foregroundColor(.white)
-                .font(.headline)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(isTextFieldFocused ? .white.opacity(0.8) : .clear, lineWidth: 2)
-                )
-                .padding(.horizontal, 40)
-                .focused($isTextFieldFocused)
-                .animation(.spring(), value: isTextFieldFocused)
-                .submitLabel(.done)
+            MoodCarousel(moods: moods, selectedMood: $selectedMood)
             
             Button(action: onTogglePlaylists) {
                 Label(showPlaylists ? "Close Camera" : "Detect with Camera", systemImage: "camera.fill")
@@ -120,19 +144,15 @@ private struct InputCard: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(
-                        LinearGradient(
-                            colors: [Color.blue.opacity(0.9), Color.purple.opacity(0.9)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
+                        LinearGradient(colors: [.blue.opacity(0.9), .purple.opacity(0.9)], startPoint: .leading, endPoint: .trailing)
                     )
                     .foregroundColor(.white)
                     .cornerRadius(14)
                     .shadow(radius: 6)
                     .scaleEffect(showPlaylists ? 1.05 : 1.0)
             }
-            .padding(.horizontal, 40)
         }
+        .padding(.horizontal, 24)
         .padding(.vertical, 20)
         .background(.ultraThinMaterial)
         .cornerRadius(20)
@@ -142,7 +162,8 @@ private struct InputCard: View {
 
 private struct SuggestedPlaylistsSection: View {
     let showPlaylists: Bool
-    let animation: Namespace.ID
+    
+    @Namespace private var animation
     
     var body: some View {
         if showPlaylists {
