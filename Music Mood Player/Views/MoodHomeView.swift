@@ -139,7 +139,7 @@ private struct InputCard: View {
             MoodCarousel(moods: moods, selectedMood: $selectedMood)
             
             Button(action: onTogglePlaylists) {
-                Label(showPlaylists ? "Close Camera" : "Detect with Camera", systemImage: "camera.fill")
+                Label("Detect with Camera", systemImage: "camera.fill")
                     .font(.headline.bold())
                     .padding()
                     .frame(maxWidth: .infinity)

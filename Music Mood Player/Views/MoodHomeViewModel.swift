@@ -35,7 +35,6 @@ final class MoodHomeViewModel: ObservableObject {
     }
     
     func togglePlaylists() {
-        showPlaylists.toggle()
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 }
