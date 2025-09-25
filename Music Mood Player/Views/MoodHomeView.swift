@@ -104,9 +104,9 @@ private struct MoodCarousel: View {
                                     .shadow(color: isSelected ? .white.opacity(0.8) : .clear, radius: 10)
                                     .scaleEffect(isSelected ? 1.2 : 1.0)
                                     .onTapGesture {
+                                        selectedMood = mood
+                                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                            selectedMood = mood
-                                            UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                             proxy.scrollTo(mood.id, anchor: .center)
                                         }
                                     }
