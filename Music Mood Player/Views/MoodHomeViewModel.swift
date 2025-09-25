@@ -9,8 +9,20 @@ import SwiftUI
 import Combine
 
 @MainActor
-final class MoodHomeViewModel: ObservableObject {
+protocol MoodHomeViewModelProtocol: ObservableObject {
+    
+    var showPlaylists: Bool { get set }
+    
+    var selectedMood: Mood? { get set }
+    
+    var moods: [Mood] { get }
+}
+
+@MainActor
+final class MoodHomeViewModel: MoodHomeViewModelProtocol {
+    
     @Published var showPlaylists: Bool = false
+    
     @Published var selectedMood: Mood? = nil
     
     private var cancellables = Set<AnyCancellable>()
@@ -32,9 +44,5 @@ final class MoodHomeViewModel: ObservableObject {
                 UIImpactFeedbackGenerator(style: .light).impactOccurred()
             }
             .store(in: &cancellables)
-    }
-    
-    func togglePlaylists() {
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 }

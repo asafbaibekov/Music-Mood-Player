@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct MusicMoodPlayerApp: App {
+    
+    let viewModel = MoodHomeViewModel()
+    
     var body: some Scene {
         WindowGroup {
-            MoodHomeView()
+            MoodHomeView(viewModel: viewModel)
         }
     }
 }

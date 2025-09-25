@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct MoodHomeView: View {
-    @StateObject private var viewModel = MoodHomeViewModel()
+struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
+    @ObservedObject private(set) var viewModel: ViewModel
     
     var body: some View {
         BackgroundView {
@@ -24,7 +24,7 @@ struct MoodHomeView: View {
                     selectedMood: $viewModel.selectedMood,
                     onTogglePlaylists: {
                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                            viewModel.togglePlaylists()
+                            viewModel.showPlaylists.toggle()
                         }
                     }
                 )
@@ -100,7 +100,7 @@ private struct MoodCarousel: View {
                                     .padding(12)
                                     .background(
                                         Circle()
-                                            .fill(isSelected ? .white.opacity(0.35) : .white.opacity(0.15))
+                                            .fill(.white.opacity(isSelected ? 0.35 : 0.15))
                                     )
                                     .overlay(
                                         Circle()
@@ -235,5 +235,6 @@ private struct PlaylistCard: View {
 }
 
 #Preview {
-    MoodHomeView()
+    let viewModel = MoodHomeViewModel()
+    MoodHomeView(viewModel: viewModel)
 }
