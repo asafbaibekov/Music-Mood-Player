@@ -201,7 +201,7 @@ private struct SuggestedPlaylistsSection: View {
             }
             .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
-            Text("No playlists yet — type a mood or use camera 🎭")
+            Text("No playlists yet — select mood or use camera 🎭")
                 .foregroundColor(.white.opacity(0.7))
                 .font(.footnote)
                 .transition(.opacity)
