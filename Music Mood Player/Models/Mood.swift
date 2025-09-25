@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Mood: Identifiable {
+struct Mood: Identifiable, Equatable {
     let id = UUID()
     let emoji: String
     let label: String

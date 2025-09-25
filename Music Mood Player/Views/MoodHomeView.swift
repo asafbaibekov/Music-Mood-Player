@@ -20,19 +20,16 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                 
                 InputCard(
                     moods: viewModel.moods,
-                    showPlaylists: $viewModel.showPlaylists,
+                    isDetecting: $viewModel.isDetecting,
                     selectedMood: $viewModel.selectedMood,
-                    onTogglePlaylists: {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                            viewModel.showPlaylists.toggle()
-                        }
+                    onTapDetectButton: {
                     }
                 )
                 .padding(.horizontal, 20)
                 
                 Spacer()
                 
-                SuggestedPlaylistsSection(showPlaylists: viewModel.showPlaylists)
+                SuggestedPlaylistsSection(showPlaylists: false)
                     .padding(.bottom, 40)
             }
         }
@@ -138,10 +135,10 @@ private struct MoodCarousel: View {
 private struct InputCard: View {
     let moods: [Mood]
     
-    @Binding var showPlaylists: Bool
+    @Binding var isDetecting: Bool
     @Binding var selectedMood: Mood?
     
-    let onTogglePlaylists: () -> Void
+    let onTapDetectButton: () -> Void
     
     var body: some View {
         VStack(spacing: 0) {
@@ -151,8 +148,11 @@ private struct InputCard: View {
             
             MoodCarousel(moods: moods, selectedMood: $selectedMood)
             
-            Button(action: onTogglePlaylists) {
-                Label("Detect with Camera", systemImage: "camera.fill")
+            Button(action: {
+                onTapDetectButton()
+                isDetecting.toggle()
+            }) {
+                Label("\(isDetecting ? "Stop" : "") Detecting with Camera", systemImage: "camera.fill")
                     .font(.headline.bold())
                     .padding()
                     .frame(maxWidth: .infinity)
@@ -170,6 +170,10 @@ private struct InputCard: View {
         .background(.ultraThinMaterial)
         .cornerRadius(20)
         .shadow(radius: 10)
+        .onChange(of: selectedMood) { _, newMood in
+            guard newMood != nil else { return }
+            self.isDetecting = false
+        }
     }
 }
 
