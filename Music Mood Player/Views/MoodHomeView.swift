@@ -121,7 +121,6 @@ private struct MoodCarousel: View {
                     .frame(maxHeight: .infinity)
                     .padding(.horizontal, geo.size.width / 2 - 35)
                 }
-                .scrollTargetBehavior(.viewAligned)
             }
         }
     }
