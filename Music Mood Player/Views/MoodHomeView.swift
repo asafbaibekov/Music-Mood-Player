@@ -20,17 +20,20 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                 
                 InputCard(
                     moods: viewModel.moods,
+                    isShowPlaylists: $viewModel.isShowPlaylists,
                     isDetecting: $viewModel.isDetecting,
                     selectedMood: $viewModel.selectedMood,
                     onTapDetectButton: {
+                        viewModel.isDetecting.toggle()
                     }
                 )
                 .padding(.horizontal, 20)
                 
                 Spacer()
                 
-                SuggestedPlaylistsSection(showPlaylists: false)
+                SuggestedPlaylistsSection(showPlaylists: viewModel.isShowPlaylists)
                     .padding(.bottom, 40)
+                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: viewModel.isShowPlaylists)
             }
         }
     }
@@ -119,14 +122,6 @@ private struct MoodCarousel: View {
                     .padding(.horizontal, geo.size.width / 2 - 35)
                 }
                 .scrollTargetBehavior(.viewAligned)
-                .onAppear {
-                    moods.first.map { first in
-                        selectedMood = first
-                        DispatchQueue.main.async {
-                            proxy.scrollTo(first.id, anchor: .center)
-                        }
-                    }
-                }
             }
         }
     }
@@ -134,7 +129,8 @@ private struct MoodCarousel: View {
 
 private struct InputCard: View {
     let moods: [Mood]
-    
+
+    @Binding var isShowPlaylists: Bool
     @Binding var isDetecting: Bool
     @Binding var selectedMood: Mood?
     
@@ -148,11 +144,8 @@ private struct InputCard: View {
             
             MoodCarousel(moods: moods, selectedMood: $selectedMood)
             
-            Button(action: {
-                onTapDetectButton()
-                isDetecting.toggle()
-            }) {
-                Label("\(isDetecting ? "Stop" : "") Detecting with Camera", systemImage: "camera.fill")
+            Button(action: onTapDetectButton) {
+                Label((isDetecting ? "Stop " : "") + "Detecting with Camera", systemImage: "camera.fill")
                     .font(.headline.bold())
                     .padding()
                     .frame(maxWidth: .infinity)
@@ -172,8 +165,11 @@ private struct InputCard: View {
         .shadow(radius: 10)
         .onChange(of: selectedMood) { _, newMood in
             guard newMood != nil else { return }
-            self.isDetecting = false
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                self.isDetecting = false
+            }
         }
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isShowPlaylists)
     }
 }
 

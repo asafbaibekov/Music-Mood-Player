@@ -11,6 +11,8 @@ import Combine
 @MainActor
 protocol MoodHomeViewModelProtocol: ObservableObject {
     
+    var isShowPlaylists: Bool { get set }
+    
     var isDetecting: Bool { get set }
     
     var selectedMood: Mood? { get set }
@@ -20,6 +22,8 @@ protocol MoodHomeViewModelProtocol: ObservableObject {
 
 @MainActor
 final class MoodHomeViewModel: MoodHomeViewModelProtocol {
+    
+    @Published var isShowPlaylists: Bool = false
     
     @Published var isDetecting: Bool = false
     
@@ -35,4 +39,12 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
         Mood(emoji: "🤩", label: "Excited"),
         Mood(emoji: "🤔", label: "Thoughtful")
     ]
+    
+    init() {
+        $selectedMood
+            .sink(receiveValue: { [weak self]  in
+                self?.isShowPlaylists = $0 != nil
+            })
+            .store(in: &cancellables)
+    }
 }
