@@ -40,7 +40,6 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
 }
 
 private struct BackgroundView<Content: View>: View {
-    @FocusState var focusState: Bool
     
     let content: () -> Content
     
@@ -49,10 +48,6 @@ private struct BackgroundView<Content: View>: View {
             LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
                 .ignoresSafeArea()
             content()
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    focusState = false
-                }
         }
     }
 }
@@ -145,7 +140,6 @@ private struct InputCard: View {
     
     @Binding var showPlaylists: Bool
     @Binding var selectedMood: Mood?
-    @FocusState var isTextFieldFocused: Bool
     
     let onTogglePlaylists: () -> Void
     
