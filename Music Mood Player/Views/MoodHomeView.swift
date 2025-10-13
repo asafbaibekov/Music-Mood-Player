@@ -10,30 +10,42 @@ import SwiftUI
 struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     @ObservedObject private(set) var viewModel: ViewModel
     
+    @StateObject private var cameraViewModel = CameraPreviewViewModel()
+    
+    @State private var windowSize: CGSize = CGSize(width: 140, height: 200)
+    
+    private var isHiddenBinding: Binding<Bool> {
+        Binding(get: { cameraViewModel.cameraStatus != .running }, set: { _ in })
+    }
+    
     var body: some View {
         BackgroundView {
-            VStack(spacing: 25) {
-                TitleView()
-                    .padding(.top, 50)
-                
-                Spacer()
-                
-                InputCard(
-                    moods: viewModel.moods,
-                    isShowPlaylists: $viewModel.isShowPlaylists,
-                    isDetecting: $viewModel.isDetecting,
-                    selectedMood: $viewModel.selectedMood,
-                    onTapDetectButton: {
-                        viewModel.isDetecting.toggle()
-                    }
-                )
-                .padding(.horizontal, 20)
-                
-                Spacer()
-                
-                SuggestedPlaylistsSection(showPlaylists: viewModel.isShowPlaylists)
-                    .padding(.bottom, 40)
-                    .animation(.spring(response: 0.4, dampingFraction: 0.7), value: viewModel.isShowPlaylists)
+            PictureInPictureView(windowSize: $windowSize, isHidden: isHiddenBinding) {
+                CameraViewRep(isEnabled: $viewModel.isDetecting, viewModel: cameraViewModel)
+            } backgroundContent: {
+                VStack(spacing: 25) {
+                    TitleView()
+                        .padding(.top, 50)
+                    
+                    Spacer()
+                    
+                    InputCard(
+                        moods: viewModel.moods,
+                        isShowPlaylists: $viewModel.isShowPlaylists,
+                        isDetecting: $viewModel.isDetecting,
+                        selectedMood: $viewModel.selectedMood,
+                        onTapDetectButton: {
+                            viewModel.isDetecting.toggle()
+                        }
+                    )
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                    
+                    SuggestedPlaylistsSection(showPlaylists: viewModel.isShowPlaylists)
+                        .padding(.bottom, 40)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: viewModel.isShowPlaylists)
+                }
             }
         }
     }
