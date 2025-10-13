@@ -14,6 +14,7 @@ enum CameraPreviewModels {
     
     enum CameraStatus: Equatable {
         case idle
+        case starting
         case running
         case stopping
         case failed(Error)
@@ -78,6 +79,9 @@ final class CameraPreviewViewModel: NSObject, CameraPreviewViewModelProtocol {
     }
     
     func startSession() {
+        Task { @MainActor in
+            self.cameraStatus = .starting
+        }
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .notDetermined:
             Task {
