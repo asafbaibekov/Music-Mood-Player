@@ -11,6 +11,10 @@ import Combine
 @MainActor
 protocol MoodHomeViewModelProtocol: ObservableObject {
     
+    var cameraViewModel: CameraPreviewViewModel { get }
+    
+    var isCameraHidden: Bool { get set }
+    
     var isShowPlaylists: Bool { get set }
     
     var isDetecting: Bool { get set }
@@ -22,6 +26,10 @@ protocol MoodHomeViewModelProtocol: ObservableObject {
 
 @MainActor
 final class MoodHomeViewModel: MoodHomeViewModelProtocol {
+    
+    let cameraViewModel = CameraPreviewViewModel()
+    
+    @Published var isCameraHidden: Bool = false
     
     @Published var isShowPlaylists: Bool = false
     
@@ -44,6 +52,13 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
         $selectedMood
             .sink(receiveValue: { [weak self]  in
                 self?.isShowPlaylists = $0 != nil
+            })
+            .store(in: &cancellables)
+        
+        cameraViewModel
+            .$cameraStatus
+            .sink(receiveValue: { [weak self] cameraStatus in
+                self?.isCameraHidden = cameraStatus != .running
             })
             .store(in: &cancellables)
     }

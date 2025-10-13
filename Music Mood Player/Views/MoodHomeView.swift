@@ -10,18 +10,12 @@ import SwiftUI
 struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     @ObservedObject private(set) var viewModel: ViewModel
     
-    @StateObject private var cameraViewModel = CameraPreviewViewModel()
-    
     @State private var windowSize: CGSize = CGSize(width: 140, height: 200)
-    
-    private var isHiddenBinding: Binding<Bool> {
-        Binding(get: { cameraViewModel.cameraStatus != .running }, set: { _ in })
-    }
     
     var body: some View {
         BackgroundView {
-            PictureInPictureView(windowSize: $windowSize, isHidden: isHiddenBinding) {
-                CameraViewRep(isEnabled: $viewModel.isDetecting, viewModel: cameraViewModel)
+            PictureInPictureView(windowSize: $windowSize, isHidden: $viewModel.isCameraHidden) {
+                CameraViewRep(isEnabled: $viewModel.isDetecting, viewModel: viewModel.cameraViewModel)
             } backgroundContent: {
                 VStack(spacing: 25) {
                     TitleView()
