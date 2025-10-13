@@ -21,6 +21,8 @@ protocol MoodHomeViewModelProtocol: ObservableObject {
     
     var selectedMood: Mood? { get set }
     
+    var facesPublisher: AnyPublisher<[UIImage], Never> { get }
+    
     var moods: [Mood] { get }
 }
 
@@ -36,6 +38,12 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
     @Published var isDetecting: Bool = false
     
     @Published var selectedMood: Mood? = nil
+    
+    var facesPublisher: AnyPublisher<[UIImage], Never> {
+        self.faceExtractorService.facesPublisher(from: self.cameraViewModel.framePublisher)
+    }
+    
+    private let faceExtractorService = FaceExtractorService()
     
     private var cancellables = Set<AnyCancellable>()
     
