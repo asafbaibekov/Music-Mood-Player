@@ -6,54 +6,8 @@
 //
 
 import UIKit
-import SwiftUI
 import AVFoundation
 import Combine
-
-enum CameraPreviewModels {
-    
-    enum CameraStatus: Equatable {
-        case idle
-        case starting
-        case running
-        case stopping
-        case failed(Error)
-        case noPermission
-        
-        static func == (lhs: CameraStatus, rhs: CameraStatus) -> Bool {
-            switch (lhs, rhs) {
-            case (.idle, .idle), (.running, .running), (.noPermission, .noPermission):
-                return true
-            case let (.failed(lhsError), .failed(rhsError)):
-                return lhsError.localizedDescription == rhsError.localizedDescription
-            default:
-                return false
-            }
-        }
-    }
-    
-    enum CameraError: Error {
-        case cameraNotAvailable
-        case cannotAddInput
-        case unknown
-    }
-    
-    struct PreviewLayerInfo {
-        let size: CGSize
-        let videoGravity: AVLayerVideoGravity
-    }
-}
-
-protocol CameraPreviewViewModelProtocol: ObservableObject {
-    
-    var previewInfo: CameraPreviewModels.PreviewLayerInfo? { get set }
-    var cameraStatus: CameraPreviewModels.CameraStatus { get }
-    var framePublisher: AnyPublisher<UIImage?, Never> { get }
-    var captureSession: AVCaptureSession { get }
-
-    func startSession()
-    func stopSession()
-}
 
 final class CameraPreviewViewModel: NSObject, CameraPreviewViewModelProtocol {
     
@@ -180,7 +134,6 @@ final class CameraPreviewViewModel: NSObject, CameraPreviewViewModelProtocol {
             self.cameraStatus = .running
         }
     }
-
 }
 
 extension CameraPreviewViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -196,9 +149,12 @@ extension CameraPreviewViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
         guard let cgImage = CIContext().createCGImage(ciImage, from: ciImage.extent) else { return }
         frameSubject.send(UIImage(cgImage: cgImage))
     }
+}
+
+private extension CameraPreviewViewModel {
 
     // Adjust image according to preview layer's aspect ratio and videoGravity
-    private func adjustImage(_ image: CIImage, to previewInfo: PreviewLayerInfo) -> CIImage {
+    func adjustImage(_ image: CIImage, to previewInfo: PreviewLayerInfo) -> CIImage {
         let bufferAspectRatio = image.extent.width / image.extent.height
         let targetAspectRatio = previewInfo.size.width / previewInfo.size.height
         
@@ -233,56 +189,6 @@ extension CameraPreviewViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
             return image.cropped(to: rect)
         default:
             return image
-        }
-    }
-}
-
-final class CameraPreviewView<ViewModel: CameraPreviewViewModelProtocol>: UIView {
-
-    let viewModel: ViewModel
-    
-    private lazy var previewLayer: AVCaptureVideoPreviewLayer = {
-        let layer = AVCaptureVideoPreviewLayer(session: viewModel.captureSession)
-        layer.videoGravity = .resizeAspectFill
-        return layer
-    }()
-    
-    init(frame: CGRect = .zero, viewModel: ViewModel) {
-        self.viewModel = viewModel
-        super.init(frame: frame)
-        self.layer.addSublayer(previewLayer)
-        viewModel.previewInfo = .init(size: previewLayer.bounds.size, videoGravity: previewLayer.videoGravity)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        previewLayer.frame = bounds
-        CATransaction.commit()
-        viewModel.previewInfo = .init(size: previewLayer.bounds.size, videoGravity: previewLayer.videoGravity)
-    }
-}
-
-struct CameraViewRep<ViewModel: CameraPreviewViewModelProtocol>: UIViewRepresentable {
-    
-    @Binding var isEnabled: Bool
-    
-    @ObservedObject var viewModel: ViewModel
-    
-    func makeUIView(context: Context) -> CameraPreviewView<ViewModel> {
-        return CameraPreviewView(frame: .zero, viewModel: self.viewModel)
-    }
-    
-    func updateUIView(_ uiView: CameraPreviewView<ViewModel>, context: Context) {
-        if isEnabled, uiView.viewModel.cameraStatus == .idle {
-            uiView.viewModel.startSession()
-        } else if !isEnabled, uiView.viewModel.cameraStatus == .running {
-            uiView.viewModel.stopSession()
         }
     }
 }
