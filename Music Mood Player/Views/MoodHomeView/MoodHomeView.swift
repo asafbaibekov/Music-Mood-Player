@@ -13,223 +13,192 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     @State private var windowSize: CGSize = CGSize(width: 140, height: 200)
     
     var body: some View {
-        BackgroundView {
+        NavigationStack {
             PictureInPictureView(windowSize: $windowSize, isHidden: $viewModel.isCameraHidden) {
                 CameraViewRep(isEnabled: $viewModel.isDetecting, viewModel: viewModel.cameraViewModel)
             } backgroundContent: {
-                VStack(spacing: 25) {
-                    TitleView()
-                        .padding(.top, 50)
-                    
-                    Spacer()
-                    
-                    InputCard(
-                        moods: viewModel.moods,
-                        isShowPlaylists: $viewModel.isShowPlaylists,
-                        isDetecting: $viewModel.isDetecting,
-                        selectedMood: $viewModel.selectedMood,
-                        onTapDetectButton: {
-                            viewModel.isDetecting.toggle()
-                        }
-                    )
-                    .padding(.horizontal, 20)
-                    
-                    Spacer()
-                    
+                ZStack {
                     SuggestedPlaylistsSection(showPlaylists: viewModel.isShowPlaylists)
-                        .padding(.bottom, 40)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: viewModel.isShowPlaylists)
-                }
-            }
-        }
-    }
-}
-
-private struct BackgroundView<Content: View>: View {
-    
-    let content: () -> Content
-    
-    var body: some View {
-        ZStack {
-            LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
-                .ignoresSafeArea()
-            content()
-        }
-    }
-}
-
-private struct TitleView: View {
-    let topLabelSize: CGFloat = 28
-    let bottomLabelSize: CGFloat = 20
-    
-    var body: some View {
-        HStack(alignment: .top, spacing: 4) {
-            Text("🎵")
-                .font(.system(size: topLabelSize, weight: .heavy, design: .rounded))
-                .foregroundStyle(.white)
-                .shadow(radius: 6)
-                .transition(.opacity.combined(with: .scale))
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Music Mood Player")
-                    .font(.system(size: topLabelSize, weight: .heavy, design: .rounded))
-                    .foregroundStyle(.white)
-                    .shadow(radius: 6)
-                    .transition(.opacity.combined(with: .scale))
-                Text("Find playlists that match your vibe")
-                    .font(.system(size: bottomLabelSize, weight: .regular, design: .default))
-                    .foregroundColor(.white.opacity(0.85))
-            }
-        }
-    }
-}
-
-private struct MoodCarousel: View {
-    let moods: [Mood]
-    @Binding var selectedMood: Mood?
-    
-    var body: some View {
-        GeometryReader { geo in
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(alignment: .center, spacing: 18) {
-                        ForEach(moods) { mood in
-                            VStack(spacing: 16) {
-                                let isSelected = selectedMood?.id == mood.id
-                                Text(mood.emoji)
-                                    .font(.system(size: isSelected ? 38 : 34))
-                                    .padding(12)
-                                    .background(
-                                        Circle()
-                                            .fill(.white.opacity(isSelected ? 0.35 : 0.15))
-                                    )
-                                    .overlay(
-                                        Circle()
-                                            .stroke(isSelected ? .white : .clear, lineWidth: 3)
-                                    )
-                                    .shadow(color: isSelected ? .white.opacity(0.8) : .clear, radius: 10)
-                                    .scaleEffect(isSelected ? 1.2 : 1.0)
-                                    .onTapGesture {
-                                        selectedMood = mood
-                                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                            proxy.scrollTo(mood.id, anchor: .center)
-                                        }
-                                    }
-                                
-                                Text(mood.label)
-                                    .font(.headline)
-                                    .foregroundColor(.white.opacity(0.9))
-                            }
-                            .id(mood.id)
-                        }
+                    
+                    VStack(spacing: 25) {
+                        
+                        Spacer()
+                        
+                        MoodsCard(
+                            moods: viewModel.moods,
+                            isShowPlaylists: $viewModel.isShowPlaylists,
+                            selectedMood: $viewModel.selectedMood
+                        )
+                        .padding(.horizontal, 20)
                     }
-                    .frame(maxHeight: .infinity)
-                    .padding(.horizontal, geo.size.width / 2 - 35)
                 }
             }
+            .toolbar(content: toolbarContent)
+            .navigationBarTitleDisplayMode(.automatic)
+            .navigationTitle("Music Mood Playlist")
+            .onChange(of: viewModel.selectedMood) { _, newMood in
+                guard newMood != nil else { return }
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    self.viewModel.isDetecting = false
+                }
+            }
+            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: self.viewModel.isShowPlaylists)
+
+        }
+    }
+    
+    @ToolbarContentBuilder
+    func toolbarContent() -> some ToolbarContent {
+        
+        ToolbarItem(placement: .topBarLeading) {
+            Button {
+                
+            } label: {
+                if #available(iOS 26, *) {
+                    Label(title: { Text("Settings") }, icon: { Images.gear })
+                } else {
+                    Images.gear
+                        .tint(.black)
+                        .padding(8)
+                        .background(Colors.unselected_emoji_bg)
+                        .clipShape(Circle())
+                }
+            }
+        }
+        
+        ToolbarItem(placement: .confirmationAction) {
+            Button {
+                viewModel.isDetecting.toggle()
+            } label: {
+                if #available(iOS 26, *) {
+                    Label(title: { Text("Detect") },
+                          icon: { (viewModel.isDetecting ? Images.checkmark : Images.faceid) })
+                } else {
+                    (viewModel.isDetecting ? Images.checkmark : Images.faceid)
+                        .foregroundColor(.white)
+                        .padding(8)
+                        .background(Colors.detect_button_bg)
+                        .clipShape(Circle())
+                }
+            }
+            .tint(Colors.detect_button_bg)
         }
     }
 }
 
-private struct InputCard: View {
+private struct MoodsCard: View {
     let moods: [Mood]
 
     @Binding var isShowPlaylists: Bool
-    @Binding var isDetecting: Bool
     @Binding var selectedMood: Mood?
     
-    let onTapDetectButton: () -> Void
+    private let columns: [GridItem] = [
+        GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())
+    ]
     
     var body: some View {
         VStack(spacing: 0) {
-            Text("How are you feeling today?")
+            Text("How are you feeling?")
                 .font(.title3.bold())
-                .foregroundColor(.white.opacity(0.9))
+                .padding(.top, 24)
             
-            MoodCarousel(moods: moods, selectedMood: $selectedMood)
-            
-            Button(action: onTapDetectButton) {
-                Label((isDetecting ? "Stop " : "") + "Detecting with Camera", systemImage: "camera.fill")
-                    .font(.headline.bold())
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        LinearGradient(colors: [.blue.opacity(0.9), .purple.opacity(0.9)], startPoint: .leading, endPoint: .trailing)
-                    )
-                    .foregroundColor(.white)
-                    .cornerRadius(14)
-                    .shadow(radius: 6)
+            LazyVGrid(columns: columns, spacing: 24) {
+                ForEach(moods) { mood in
+                    let isSelected = selectedMood?.id == mood.id
+                    VStack(spacing: 8) {
+                        Text(mood.emoji)
+                            .font(.system(size: 34))
+                            .frame(width: 72, height: 72)
+                            .background(
+                                Circle()
+                                    .fill(isSelected ? Colors.selected_emoji_bg : Colors.unselected_emoji_bg)
+                            )
+                        
+                        Text(mood.label)
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                    .onTapGesture {
+                        selectedMood = mood
+                    }
+                    .id(mood.id)
+                }
             }
+            .padding(24)
         }
-        .frame(minHeight: 200, maxHeight: 230)
-        .padding(.horizontal, 24)
-        .padding(.vertical, 20)
         .background(.ultraThinMaterial)
-        .cornerRadius(20)
-        .shadow(radius: 10)
-        .onChange(of: selectedMood) { _, newMood in
-            guard newMood != nil else { return }
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                self.isDetecting = false
-            }
-        }
-        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isShowPlaylists)
+        .cornerRadius(24)
     }
 }
 
 private struct SuggestedPlaylistsSection: View {
+    
     let showPlaylists: Bool
     
-    @Namespace private var animation
+    private let columns: [GridItem] = [
+        GridItem(.flexible(), spacing: 16), GridItem(.flexible())
+    ]
     
     var body: some View {
         if showPlaylists {
-            VStack(alignment: .leading, spacing: 15) {
-                Text("🎧 Suggested Playlists")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 25)
-                
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 20) {
-                        ForEach(0..<3, id: \.self) { index in
-                            PlaylistCard(index: index, animation: animation)
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVGrid(columns: columns, spacing: 16) {
+                    ForEach(0..<23, id: \.self) { index in
+                        VStack(alignment: .leading) {
+                            GeometryReader { proxy in
+                                RoundedRectangle(cornerRadius: 18)
+                                    .fill(.green.opacity(0.5))
+                                    .frame(height: proxy.size.width)
+                                    .overlay(
+                                        VStack {
+                                            Image(systemName: "music.note.list")
+                                                .font(.largeTitle)
+                                                .foregroundColor(.white)
+                                            Text("Playlist \(index + 1)")
+                                                .foregroundColor(.white)
+                                                .font(.subheadline.bold())
+                                        }
+                                    )
+                            }
+                            .aspectRatio(1, contentMode: .fit)
+                            
+                            Text("Playlist name")
+                                .font(.system(size: 16, weight: .semibold))
+                                .lineLimit(1)
+                                .padding(.horizontal, 4)
+                            Text("Creator name")
+                                .font(.system(size: 14, weight: .semibold))
+                                .minimumScaleFactor(0.9)
+                                .lineLimit(1)
+                                .foregroundStyle(Color.gray)
+                                .padding(.horizontal, 4)
                         }
                     }
-                    .padding(.horizontal, 25)
                 }
             }
-            .transition(.move(edge: .bottom).combined(with: .opacity))
-        } else {
-            Text("No playlists yet — select mood or use camera 🎭")
-                .foregroundColor(.white.opacity(0.7))
-                .font(.footnote)
-                .transition(.opacity)
+            .padding(.horizontal, 20)
         }
     }
 }
 
-private struct PlaylistCard: View {
-    let index: Int
-    let animation: Namespace.ID
+private enum Images: String, View {
+    case faceid
+    case checkmark
+    case gear
     
     var body: some View {
-        RoundedRectangle(cornerRadius: 18)
-            .fill(.white.opacity(0.2))
-            .frame(width: 180, height: 200)
-            .overlay(
-                VStack {
-                    Image(systemName: "music.note.list")
-                        .font(.largeTitle)
-                        .foregroundColor(.white)
-                    Text("Playlist \(index+1)")
-                        .foregroundColor(.white)
-                        .font(.subheadline.bold())
-                }
-            )
-            .shadow(radius: 8)
-            .matchedGeometryEffect(id: "playlist\(index)", in: animation)
+        Image(systemName: self.rawValue)
+    }
+}
+
+private enum Colors: String, ShapeStyle {
+    
+    case detect_button_bg
+    case selected_emoji_bg
+    case unselected_emoji_bg
+    
+    func resolve(in environment: EnvironmentValues) -> some ShapeStyle {
+        Color(rawValue)
     }
 }
 
