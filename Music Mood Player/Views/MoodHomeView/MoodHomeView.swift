@@ -104,30 +104,41 @@ private struct MoodsCard: View {
             
             LazyVGrid(columns: columns, spacing: 24) {
                 ForEach(moods) { mood in
-                    let isSelected = selectedMood?.id == mood.id
-                    VStack(spacing: 8) {
-                        Text(mood.emoji)
-                            .font(.system(size: 34))
-                            .frame(width: 72, height: 72)
-                            .background(
-                                Circle()
-                                    .fill(isSelected ? Colors.selected_emoji_bg : Colors.unselected_emoji_bg)
-                            )
-                        
-                        Text(mood.label)
-                            .font(.system(size: 14))
-                            .foregroundColor(.white.opacity(0.9))
-                    }
-                    .onTapGesture {
-                        selectedMood = mood
-                    }
-                    .id(mood.id)
+                    MoodCell(mood: mood, selectedMood: $selectedMood)
                 }
             }
             .padding(24)
         }
         .background(.ultraThinMaterial)
         .cornerRadius(24)
+    }
+}
+
+private struct MoodCell: View {
+    
+    let mood: Mood
+    
+    @Binding var selectedMood: Mood?
+    
+    var body: some View {
+        let isSelected = selectedMood?.id == mood.id
+        VStack(spacing: 8) {
+            Text(mood.emoji)
+                .font(.system(size: 34))
+                .frame(width: 72, height: 72)
+                .background(
+                    Circle()
+                        .fill(isSelected ? Colors.selected_emoji_bg : Colors.unselected_emoji_bg)
+                )
+            
+            Text(mood.label)
+                .font(.system(size: 14))
+                .foregroundColor(.white.opacity(0.9))
+        }
+        .onTapGesture {
+            selectedMood = mood
+        }
+        .id(mood.id)
     }
 }
 
