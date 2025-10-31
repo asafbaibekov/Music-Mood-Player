@@ -29,6 +29,7 @@ extension MoodHomeView {
                         PlaylistCell(index: index, playlistName: "Playlist name", creatorName: "Creator name")
                     }
                 }
+                .padding(.bottom, bottomInset)
             }
             .onScrollGeometryChange(
                 for: CGFloat.self,
@@ -45,9 +46,6 @@ extension MoodHomeView {
                     .onChanged { _ in isDragging = true }
                     .onEnded { _ in isDragging = false }
             )
-            .safeAreaInset(edge: .bottom) {
-                Spacer().frame(height: bottomInset)
-            }
             .padding(.horizontal, 20)
         }
     }
