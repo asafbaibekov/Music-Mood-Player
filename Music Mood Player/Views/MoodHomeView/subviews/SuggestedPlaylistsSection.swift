@@ -26,35 +26,7 @@ extension MoodHomeView {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(0..<23, id: \.self) { index in
-                        VStack(alignment: .leading) {
-                            GeometryReader { proxy in
-                                RoundedRectangle(cornerRadius: 18)
-                                    .fill(.green.opacity(0.5))
-                                    .frame(height: proxy.size.width)
-                                    .overlay(
-                                        VStack {
-                                            Image(systemName: "music.note.list")
-                                                .font(.largeTitle)
-                                                .foregroundColor(.white)
-                                            Text("Playlist \(index + 1)")
-                                                .foregroundColor(.white)
-                                                .font(.subheadline.bold())
-                                        }
-                                    )
-                            }
-                            .aspectRatio(1, contentMode: .fit)
-                            
-                            Text("Playlist name")
-                                .font(.system(size: 16, weight: .semibold))
-                                .lineLimit(1)
-                                .padding(.horizontal, 4)
-                            Text("Creator name")
-                                .font(.system(size: 14, weight: .semibold))
-                                .minimumScaleFactor(0.9)
-                                .lineLimit(1)
-                                .foregroundStyle(Color.gray)
-                                .padding(.horizontal, 4)
-                        }
+                        PlaylistCell(index: index, playlistName: "Playlist name", creatorName: "Creator name")
                     }
                 }
             }
@@ -77,6 +49,47 @@ extension MoodHomeView {
                 Spacer().frame(height: bottomInset)
             }
             .padding(.horizontal, 20)
+        }
+    }
+    
+    struct PlaylistCell: View {
+        
+        let index: Int
+        
+        let playlistName: String
+        
+        let creatorName: String
+        
+        var body: some View {
+            VStack(alignment: .leading) {
+                GeometryReader { proxy in
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(.green.opacity(0.5))
+                        .frame(height: proxy.size.width)
+                        .overlay(
+                            VStack {
+                                Image(systemName: "music.note.list")
+                                    .font(.largeTitle)
+                                    .foregroundColor(.white)
+                                Text("Playlist \(index + 1)")
+                                    .foregroundColor(.white)
+                                    .font(.subheadline.bold())
+                            }
+                        )
+                }
+                .aspectRatio(1, contentMode: .fit)
+                
+                Text(playlistName)
+                    .font(.system(size: 16, weight: .semibold))
+                    .lineLimit(1)
+                    .padding(.horizontal, 4)
+                Text(creatorName)
+                    .font(.system(size: 14, weight: .semibold))
+                    .minimumScaleFactor(0.9)
+                    .lineLimit(1)
+                    .foregroundStyle(Color.gray)
+                    .padding(.horizontal, 4)
+            }
         }
     }
 }
