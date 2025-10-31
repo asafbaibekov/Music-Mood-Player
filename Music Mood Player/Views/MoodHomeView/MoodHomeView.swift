@@ -12,24 +12,45 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     
     @State private var windowSize: CGSize = CGSize(width: 140, height: 200)
     
+    @State private var isCardClosed: Bool = false
+    
+    @State private var cardHeight: CGFloat = 0
+    
+    private let peekHeight: CGFloat = 38
+    
     var body: some View {
         NavigationStack {
             PictureInPictureView(windowSize: $windowSize, isHidden: $viewModel.isCameraHidden) {
                 CameraViewRep(isEnabled: $viewModel.isDetecting, viewModel: viewModel.cameraViewModel)
             } backgroundContent: {
                 ZStack {
-                    SuggestedPlaylistsSection(showPlaylists: viewModel.isShowPlaylists)
-                    
-                    VStack(spacing: 25) {
-                        
-                        Spacer()
-                        
+                    GeometryReader { screenProxy in
+                        let screenHeight = screenProxy.size.height
+                        SuggestedPlaylistsSection(showPlaylists: viewModel.isShowPlaylists, bottomInset: peekHeight + 24) {
+                            guard !isCardClosed else { return }
+                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                isCardClosed = true
+                            }
+                        }
                         MoodsCard(
                             moods: viewModel.moods,
                             isShowPlaylists: $viewModel.isShowPlaylists,
-                            selectedMood: $viewModel.selectedMood
+                            selectedMood: $viewModel.selectedMood,
+                            isHidding: $isCardClosed,
+                            onTapHeader: {
+                                isCardClosed = false
+                            }
                         )
+                        .offset(y: screenHeight - (isCardClosed ? peekHeight : cardHeight))
                         .padding(.horizontal, 20)
+                        .background( // Measure the full card height
+                            GeometryReader { proxy in
+                                Color.clear
+                                    .onAppear { cardHeight = proxy.size.height }
+                                    .onChange(of: proxy.size.height) { cardHeight = $1 }
+                            }
+                        )
+                        .animation(.spring(response: 0.35, dampingFraction: 1), value: isCardClosed)
                     }
                 }
             }
@@ -43,7 +64,6 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                 }
             }
             .animation(.spring(response: 0.4, dampingFraction: 0.7), value: self.viewModel.isShowPlaylists)
-
         }
     }
     
@@ -91,54 +111,89 @@ private struct MoodsCard: View {
 
     @Binding var isShowPlaylists: Bool
     @Binding var selectedMood: Mood?
+    @Binding var isHidding: Bool
     
-    private let columns: [GridItem] = [
-        GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())
-    ]
+    var onTapHeader: (() -> Void)?
+    
+    private let columns = 3
     
     var body: some View {
         VStack(spacing: 0) {
             Text("How are you feeling?")
                 .font(.title3.bold())
                 .padding(.top, 24)
+                .onTapGesture {
+                    onTapHeader?()
+                }
             
-            LazyVGrid(columns: columns, spacing: 24) {
-                ForEach(moods) { mood in
-                    MoodCell(mood: mood, selectedMood: $selectedMood)
+            let moodRows = buildGrid(from: moods, columns: columns)
+            
+            VStack(spacing: 8) {
+                ForEach(moodRows.indices, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        Spacer()
+                        ForEach(0..<columns, id: \.self) { column in
+                            MoodCell(mood: moodRows[row][column], selectedMood: $selectedMood)
+                            if column < columns - 1 {
+                                Spacer()
+                            }
+                        }
+                        Spacer()
+                    }
                 }
             }
-            .padding(24)
+            .padding(.vertical, 24)
+            .frame(maxWidth: .infinity)
         }
+        .frame(maxWidth: .infinity)
         .background(.ultraThinMaterial)
         .cornerRadius(24)
+    }
+    
+    func buildGrid(from moods: [Mood], columns: Int) -> [[Mood?]] {
+        guard columns > 0 else { return [] }
+        
+        // Split moods into chunks of `columns` size
+        let chunked = stride(from: 0, to: moods.count, by: columns).map {
+            Array(moods[$0 ..< min($0 + columns, moods.count)])
+        }
+        
+        // Pad the last row (if needed) with nil placeholders
+        return chunked.map { row in
+            row.count < columns
+                ? row + Array(repeating: nil, count: columns - row.count)
+                : row
+        }
     }
 }
 
 private struct MoodCell: View {
     
-    let mood: Mood
+    let mood: Mood?
     
     @Binding var selectedMood: Mood?
     
     var body: some View {
-        let isSelected = selectedMood?.id == mood.id
+        let isSelected = selectedMood?.id == mood?.id
         VStack(spacing: 8) {
-            Text(mood.emoji)
-                .font(.system(size: 34))
+            ZStack {
+                Group {
+                    if mood != nil {
+                        Circle().fill(isSelected ? Colors.selected_emoji_bg : Colors.unselected_emoji_bg)
+                    } else {
+                        Color.clear
+                    }
+                }
                 .frame(width: 72, height: 72)
-                .background(
-                    Circle()
-                        .fill(isSelected ? Colors.selected_emoji_bg : Colors.unselected_emoji_bg)
-                )
-            
-            Text(mood.label)
+                Text(mood?.emoji ?? "")
+                    .font(.system(size: 34))
+            }
+            Text(mood?.label ?? "")
                 .font(.system(size: 14))
                 .foregroundColor(.white.opacity(0.9))
         }
-        .onTapGesture {
-            selectedMood = mood
-        }
-        .id(mood.id)
+        .onTapGesture { selectedMood = mood }
+        .id(mood?.id)
     }
 }
 
@@ -146,7 +201,7 @@ private struct SuggestedPlaylistsSection: View {
     
     let showPlaylists: Bool
     
-    let bottomInset: CGFloat = 0
+    private(set) var bottomInset: CGFloat?
     
     var onSwipeDown: (() -> Void)? = nil
     
