@@ -26,10 +26,12 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                 ZStack {
                     GeometryReader { screenProxy in
                         let screenHeight = screenProxy.size.height
-                        SuggestedPlaylistsSection(showPlaylists: viewModel.isShowPlaylists, bottomInset: peekHeight + 24) {
-                            guard !isCardClosed else { return }
-                            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                isCardClosed = true
+                        if viewModel.isShowPlaylists {
+                            SuggestedPlaylistsSection(bottomInset: peekHeight + 24) {
+                                guard !isCardClosed else { return }
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                    isCardClosed = true
+                                }
                             }
                         }
                         MoodsCard(
@@ -199,8 +201,6 @@ private struct MoodCell: View {
 
 private struct SuggestedPlaylistsSection: View {
     
-    let showPlaylists: Bool
-    
     private(set) var bottomInset: CGFloat?
     
     var onSwipeDown: (() -> Void)? = nil
@@ -213,62 +213,60 @@ private struct SuggestedPlaylistsSection: View {
     @State private var isDragging: Bool = false
     
     var body: some View {
-        if showPlaylists {
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVGrid(columns: columns, spacing: 16) {
-                    ForEach(0..<23, id: \.self) { index in
-                        VStack(alignment: .leading) {
-                            GeometryReader { proxy in
-                                RoundedRectangle(cornerRadius: 18)
-                                    .fill(.green.opacity(0.5))
-                                    .frame(height: proxy.size.width)
-                                    .overlay(
-                                        VStack {
-                                            Image(systemName: "music.note.list")
-                                                .font(.largeTitle)
-                                                .foregroundColor(.white)
-                                            Text("Playlist \(index + 1)")
-                                                .foregroundColor(.white)
-                                                .font(.subheadline.bold())
-                                        }
-                                    )
-                            }
-                            .aspectRatio(1, contentMode: .fit)
-                            
-                            Text("Playlist name")
-                                .font(.system(size: 16, weight: .semibold))
-                                .lineLimit(1)
-                                .padding(.horizontal, 4)
-                            Text("Creator name")
-                                .font(.system(size: 14, weight: .semibold))
-                                .minimumScaleFactor(0.9)
-                                .lineLimit(1)
-                                .foregroundStyle(Color.gray)
-                                .padding(.horizontal, 4)
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVGrid(columns: columns, spacing: 16) {
+                ForEach(0..<23, id: \.self) { index in
+                    VStack(alignment: .leading) {
+                        GeometryReader { proxy in
+                            RoundedRectangle(cornerRadius: 18)
+                                .fill(.green.opacity(0.5))
+                                .frame(height: proxy.size.width)
+                                .overlay(
+                                    VStack {
+                                        Image(systemName: "music.note.list")
+                                            .font(.largeTitle)
+                                            .foregroundColor(.white)
+                                        Text("Playlist \(index + 1)")
+                                            .foregroundColor(.white)
+                                            .font(.subheadline.bold())
+                                    }
+                                )
                         }
+                        .aspectRatio(1, contentMode: .fit)
+                        
+                        Text("Playlist name")
+                            .font(.system(size: 16, weight: .semibold))
+                            .lineLimit(1)
+                            .padding(.horizontal, 4)
+                        Text("Creator name")
+                            .font(.system(size: 14, weight: .semibold))
+                            .minimumScaleFactor(0.9)
+                            .lineLimit(1)
+                            .foregroundStyle(Color.gray)
+                            .padding(.horizontal, 4)
                     }
                 }
             }
-            .onScrollGeometryChange(
-                for: CGFloat.self,
-                of: { geometry in
-                    geometry.contentOffset.y
-                },
-                action: { oldValue, newValue in
-                    guard isDragging, newValue - oldValue > 3 else { return }
-                    onSwipeDown?()
-                }
-            )
-            .simultaneousGesture(
-                DragGesture()
-                    .onChanged { _ in isDragging = true }
-                    .onEnded { _ in isDragging = false }
-            )
-            .safeAreaInset(edge: .bottom) {
-                Spacer().frame(height: bottomInset)
-            }
-            .padding(.horizontal, 20)
         }
+        .onScrollGeometryChange(
+            for: CGFloat.self,
+            of: { geometry in
+                geometry.contentOffset.y
+            },
+            action: { oldValue, newValue in
+                guard isDragging, newValue - oldValue > 3 else { return }
+                onSwipeDown?()
+            }
+        )
+        .simultaneousGesture(
+            DragGesture()
+                .onChanged { _ in isDragging = true }
+                .onEnded { _ in isDragging = false }
+        )
+        .safeAreaInset(edge: .bottom) {
+            Spacer().frame(height: bottomInset)
+        }
+        .padding(.horizontal, 20)
     }
 }
 
