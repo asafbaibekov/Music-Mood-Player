@@ -209,9 +209,8 @@ private struct SuggestedPlaylistsSection: View {
         GridItem(.flexible(), spacing: 16), GridItem(.flexible())
     ]
     
-    @State private var lastY: CGFloat = .zero
-    @State private var isScrollingDown = false
-    @State private var lastTriggerTime: Date = .distantPast
+    @State private var dragStartY: CGFloat?
+    @State private var isDragging: Bool = false
     
     var body: some View {
         if showPlaylists {
@@ -256,21 +255,14 @@ private struct SuggestedPlaylistsSection: View {
                     geometry.contentOffset.y
                 },
                 action: { oldValue, newValue in
-                    let delta = newValue - oldValue
-                    
-                    // Ignore small noise and negative offset
-                    guard abs(delta) > 3, newValue > 0 else { return }
-                    
-                    // Detect scroll down
-                    guard delta > 0 else { return }
-                    
-                    let now = Date()
-                    
-                    // Trigger only if at least 0.3s passed since last trigger
-                    guard now.timeIntervalSince(lastTriggerTime) > 0.3 else { return }
-                    lastTriggerTime = now
+                    guard isDragging, newValue - oldValue > 3 else { return }
                     onSwipeDown?()
                 }
+            )
+            .simultaneousGesture(
+                DragGesture()
+                    .onChanged { _ in isDragging = true }
+                    .onEnded { _ in isDragging = false }
             )
             .safeAreaInset(edge: .bottom) {
                 Spacer().frame(height: bottomInset)
