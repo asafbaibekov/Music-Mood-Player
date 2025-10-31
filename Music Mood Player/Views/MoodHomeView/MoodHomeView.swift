@@ -146,9 +146,17 @@ private struct SuggestedPlaylistsSection: View {
     
     let showPlaylists: Bool
     
+    let bottomInset: CGFloat = 0
+    
+    var onSwipeDown: (() -> Void)? = nil
+    
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 16), GridItem(.flexible())
     ]
+    
+    @State private var lastY: CGFloat = .zero
+    @State private var isScrollingDown = false
+    @State private var lastTriggerTime: Date = .distantPast
     
     var body: some View {
         if showPlaylists {
@@ -186,6 +194,31 @@ private struct SuggestedPlaylistsSection: View {
                         }
                     }
                 }
+            }
+            .onScrollGeometryChange(
+                for: CGFloat.self,
+                of: { geometry in
+                    geometry.contentOffset.y
+                },
+                action: { oldValue, newValue in
+                    let delta = newValue - oldValue
+                    
+                    // Ignore small noise and negative offset
+                    guard abs(delta) > 3, newValue > 0 else { return }
+                    
+                    // Detect scroll down
+                    guard delta > 0 else { return }
+                    
+                    let now = Date()
+                    
+                    // Trigger only if at least 0.3s passed since last trigger
+                    guard now.timeIntervalSince(lastTriggerTime) > 0.3 else { return }
+                    lastTriggerTime = now
+                    onSwipeDown?()
+                }
+            )
+            .safeAreaInset(edge: .bottom) {
+                Spacer().frame(height: bottomInset)
             }
             .padding(.horizontal, 20)
         }
