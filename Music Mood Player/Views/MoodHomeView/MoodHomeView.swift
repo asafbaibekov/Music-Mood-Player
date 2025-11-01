@@ -19,10 +19,10 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     private let peekHeight: CGFloat = 38
     
     var body: some View {
-        NavigationStack {
-            PictureInPictureView(windowSize: $windowSize, isHidden: $viewModel.isCameraHidden) {
-                CameraViewRep(isEnabled: $viewModel.isDetecting, viewModel: viewModel.cameraViewModel)
-            } backgroundContent: {
+        PictureInPictureView(windowSize: $windowSize, isHidden: $viewModel.isCameraHidden) {
+            CameraViewRep(isEnabled: $viewModel.isDetecting, viewModel: viewModel.cameraViewModel)
+        } backgroundContent: {
+            NavigationStack {
                 ZStack {
                     GeometryReader { screenProxy in
                         let screenHeight = screenProxy.size.height
@@ -55,17 +55,17 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                         .animation(.spring(response: 0.35, dampingFraction: 1), value: isCardClosed)
                     }
                 }
-            }
-            .toolbar(content: toolbarContent)
-            .navigationBarTitleDisplayMode(.automatic)
-            .navigationTitle("Music Mood Playlist")
-            .onChange(of: viewModel.selectedMood) { _, newMood in
-                guard newMood != nil else { return }
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                    self.viewModel.isDetecting = false
+                .toolbar(content: toolbarContent)
+                .navigationBarTitleDisplayMode(.automatic)
+                .navigationTitle("Music Mood Playlist")
+                .onChange(of: viewModel.selectedMood) { _, newMood in
+                    guard newMood != nil else { return }
+                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                        self.viewModel.isDetecting = false
+                    }
                 }
+                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: self.viewModel.isShowPlaylists)
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: self.viewModel.isShowPlaylists)
         }
     }
     
