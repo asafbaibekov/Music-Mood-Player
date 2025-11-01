@@ -43,6 +43,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                                 isCardClosed = false
                             }
                         )
+                        .gesture(dragGesture)
                         .offset(y: screenHeight - (isCardClosed ? peekHeight : cardHeight))
                         .padding(.horizontal, 20)
                         .background( // Measure the full card height
@@ -106,6 +107,17 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
             }
             .tint(Colors.detect_button_bg)
         }
+    }
+    
+    var dragGesture: some Gesture {
+        DragGesture()
+            .onChanged { value in
+                guard viewModel.isShowPlaylists else { return }
+                guard value.translation.height > 50 else { return }
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    isCardClosed = true
+                }
+            }
     }
 }
 
