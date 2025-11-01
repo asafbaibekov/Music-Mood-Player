@@ -55,6 +55,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                         .animation(.spring(response: 0.35, dampingFraction: 1), value: isCardClosed)
                     }
                 }
+                .persistentSystemOverlays(isCardClosed ? .hidden : .automatic)
                 .toolbar(content: toolbarContent)
                 .navigationBarTitleDisplayMode(.automatic)
                 .navigationTitle("Music Mood Playlist")
