@@ -6,16 +6,17 @@
 //
 
 import SwiftUI
+
 extension MoodHomeView {
     
-    enum Colors: String, ShapeStyle {
+    enum Colors {
         
-        case detect_button_bg
-        case selected_emoji_bg
-        case unselected_emoji_bg
+        static var detect_button_bg: Color {
+            Color("detect_button_bg")
+        }
         
-        func resolve(in environment: EnvironmentValues) -> some ShapeStyle {
-            Color(rawValue)
+        static var selected_emoji_bg: Color {
+            Color("selected_emoji_bg")
         }
     }
 }

@@ -82,9 +82,8 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                     Label(title: { Text("Settings") }, icon: { Images.gear })
                 } else {
                     Images.gear
-                        .tint(.black)
+                        .tint(.primary)
                         .padding(8)
-                        .background(Colors.unselected_emoji_bg)
                         .clipShape(Circle())
                 }
             }

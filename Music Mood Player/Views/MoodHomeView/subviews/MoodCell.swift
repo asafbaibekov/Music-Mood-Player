@@ -21,7 +21,7 @@ extension MoodHomeView {
                 ZStack {
                     Group {
                         if mood != nil {
-                            Circle().fill(isSelected ? Colors.selected_emoji_bg : Colors.unselected_emoji_bg)
+                            Circle().fill(isSelected ? Colors.selected_emoji_bg : Color(.tertiarySystemFill))
                         } else {
                             Color.clear
                         }
@@ -38,4 +38,29 @@ extension MoodHomeView {
             .id(mood?.id)
         }
     }
+}
+
+#Preview {
+    @Previewable @State var selectedMood: Mood? = nil
+    
+    HStack(spacing: 0) {
+        Spacer()
+        MoodHomeView<MoodHomeViewModel>.MoodCell(
+            mood: Mood(emoji: "🙂", label: "Happy"),
+            selectedMood: $selectedMood
+        )
+        Spacer()
+        MoodHomeView<MoodHomeViewModel>.MoodCell(
+            mood: Mood(emoji: "😢", label: "Sad"),
+            selectedMood: $selectedMood
+        )
+        Spacer()
+        MoodHomeView<MoodHomeViewModel>.MoodCell(
+            mood: Mood(emoji: "😡", label: "Angry"),
+            selectedMood: $selectedMood
+        )
+        Spacer()
+    }
+    .frame(maxWidth: .infinity)
+    .background(.ultraThinMaterial)
 }
