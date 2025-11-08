@@ -32,7 +32,7 @@ extension MoodHomeView {
                 }
                 Text(mood?.label ?? "")
                     .font(.system(size: 14))
-                    .foregroundColor(.white.opacity(0.9))
+                    .foregroundColor(.primary.opacity(0.9))
             }
             .onTapGesture { selectedMood = mood }
             .id(mood?.id)
