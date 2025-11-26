@@ -7,34 +7,31 @@
 
 import SwiftUI
 
-extension MoodHomeView {
+enum Icons {
     
-    enum Icons {
+    enum System: String, View {
         
-        enum System: String, View {
-            
-            case faceid
-            case checkmark
-            case gear
-            
-            var body: some View {
-                Image(systemName: self.rawValue)
-            }
+        case faceid
+        case checkmark
+        case gear
+        
+        var body: some View {
+            Image(systemName: self.rawValue)
+        }
+    }
+    
+    enum Custom: String, View {
+        
+        case spotify
+        case apple_music
+        case youtube_music
+        
+        var body: some View {
+            Image(rawValue)
         }
         
-        enum Custom: String, View {
-            
-            case spotify
-            case apple_music
-            case youtube_music
-            
-            var body: some View {
-                Image(rawValue)
-            }
-            
-            var imageResource: ImageResource {
-                ImageResource(name: rawValue, bundle: .main)
-            }
+        var imageResource: ImageResource {
+            ImageResource(name: rawValue, bundle: .main)
         }
     }
 }

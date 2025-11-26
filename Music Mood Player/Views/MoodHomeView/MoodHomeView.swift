@@ -18,10 +18,6 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     
     private let peekHeight: CGFloat = 38
     
-    @State var spotifyToggle: Bool = false
-    @State var appleMusicToggle: Bool = false
-    @State var youtubeMusicToggle: Bool = false
-    
     var body: some View {
         PictureInPictureView(windowSize: $windowSize, isHidden: $viewModel.isCameraHidden) {
             CameraViewRep(isEnabled: $viewModel.isDetecting, viewModel: viewModel.cameraViewModel)
@@ -81,21 +77,9 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
         ToolbarItem(placement: .topBarLeading) {
             Menu {
                 Text("Login / Logout")
-                Toggle(
-                    "Spotify",
-                    image: Icons.Custom.spotify.imageResource,
-                    isOn: $spotifyToggle
-                )
-                Toggle(
-                    "Apple Music",
-                    image: Icons.Custom.apple_music.imageResource,
-                    isOn: $appleMusicToggle
-                )
-                Toggle(
-                    "Youtube Music",
-                    image: Icons.Custom.youtube_music.imageResource,
-                    isOn: $youtubeMusicToggle
-                )
+                ForEach(viewModel.musicStreamServices, id: \.id) { musicStreamService in
+                    ServiceToggleRow(service: musicStreamService)
+                }
             } label: {
                 if #available(iOS 26, *) {
                     Label(title: { Text("Settings") }, icon: { Icons.System.gear })

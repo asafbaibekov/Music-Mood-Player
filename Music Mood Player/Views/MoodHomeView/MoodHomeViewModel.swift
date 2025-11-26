@@ -24,6 +24,8 @@ protocol MoodHomeViewModelProtocol: ObservableObject {
     var facesPublisher: AnyPublisher<[UIImage], Never> { get }
     
     var moods: [Mood] { get }
+    
+    var musicStreamServices: [any MusicStreamService] { get }
 }
 
 @MainActor
@@ -54,6 +56,12 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
         Mood(emoji: "😴", label: "Chill"),
         Mood(emoji: "🤩", label: "Excited"),
         Mood(emoji: "🤔", label: "Thoughtful")
+    ]
+    
+    let musicStreamServices: [any MusicStreamService] = [
+        SpotifyService(),
+        AppleMusicService(),
+        YouTubeMusicService()
     ]
     
     init() {

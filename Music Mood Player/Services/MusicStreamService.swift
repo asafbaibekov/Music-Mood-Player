@@ -1,0 +1,32 @@
+//
+//  MusicStreamService.swift
+//  Music Mood Player
+//
+//  Created by Asaf Baibekov on 26/11/2025.
+//
+
+import Foundation
+import SwiftUI
+import Combine
+
+protocol MusicStreamService: Identifiable {
+    
+    var id: UUID { get }
+    
+    var name: String { get }
+    
+    var icon: ImageResource { get }
+    
+    var isLoggedInSubject: CurrentValueSubject<Bool, Never> { get }
+    
+    func login()
+    
+    func logout()
+}
+
+extension MusicStreamService {
+    
+    var id: UUID {
+        UUID()
+    }
+}
