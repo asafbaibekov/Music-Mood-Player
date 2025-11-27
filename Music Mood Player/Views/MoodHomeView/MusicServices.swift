@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import Combine
 
-final class SpotifyService: MusicStreamService {
+final class SpotifyStreamService: MusicStreamService {
     
     var name: String = "Spotify"
     
@@ -28,7 +28,7 @@ final class SpotifyService: MusicStreamService {
     }
 }
 
-final class AppleMusicService: MusicStreamService {
+final class AppleMusicStreamService: MusicStreamService {
     
     var name: String = "Apple Music"
     
@@ -47,7 +47,7 @@ final class AppleMusicService: MusicStreamService {
     }
 }
 
-final class YouTubeMusicService: MusicStreamService {
+final class YouTubeMusicStreamService: MusicStreamService {
     
     var name: String = "Youtube Music"
     

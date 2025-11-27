@@ -59,9 +59,9 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
     ]
     
     let musicStreamServices: [any MusicStreamService] = [
-        SpotifyService(),
-        AppleMusicService(),
-        YouTubeMusicService()
+        SpotifyStreamService(),
+        AppleMusicStreamService(),
+        YouTubeMusicStreamService()
     ]
     
     init() {
