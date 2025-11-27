@@ -54,7 +54,9 @@ final class CameraPreviewViewModel: NSObject, CameraPreviewViewModelProtocol {
                 cameraStatus = .noPermission
             }
         @unknown default:
-            cameraStatus = .failed(CameraError.unknown)
+            Task { @MainActor in
+                cameraStatus = .failed(CameraError.unknown)
+            }
         }
     }
     
@@ -82,7 +84,9 @@ final class CameraPreviewViewModel: NSObject, CameraPreviewViewModelProtocol {
         self.captureSession.beginConfiguration()
         self.captureSession.sessionPreset = .high
         guard let captureDevice else {
-            self.cameraStatus = .failed(CameraError.cameraNotAvailable)
+            Task { @MainActor in
+                self.cameraStatus = .failed(CameraError.cameraNotAvailable)
+            }
             self.captureSession.commitConfiguration()
             return
         }
@@ -93,10 +97,14 @@ final class CameraPreviewViewModel: NSObject, CameraPreviewViewModelProtocol {
                 self.captureSession.addInput(input)
                 self.currentInput = input
             } else {
-                self.cameraStatus = .failed(CameraError.cannotAddInput)
+                Task { @MainActor in
+                    self.cameraStatus = .failed(CameraError.cannotAddInput)
+                }
             }
         } catch {
-            self.cameraStatus = .failed(error)
+            Task { @MainActor in
+                self.cameraStatus = .failed(error)
+            }
         }
         
         let outputQueue = DispatchQueue(label: "CameraFrameQueue")
