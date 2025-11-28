@@ -10,11 +10,33 @@ import SwiftUI
 @main
 struct MusicMoodPlayerApp: App {
     
-    let viewModel = MoodHomeViewModel()
+    let spotifyService: SpotifyStreamService
+    
+    let viewModel: MoodHomeViewModel
+    
+    init() {
+        self.spotifyService = SpotifyStreamService()
+        self.viewModel = MoodHomeViewModel(musicStreamServices: [
+            spotifyService
+        ])
+    }
     
     var body: some Scene {
         WindowGroup {
             MoodHomeView(viewModel: viewModel)
+                .onOpenURL(perform: onOpenURL(_:))
+        }
+    }
+}
+
+private extension MusicMoodPlayerApp {
+    
+    func onOpenURL(_ url: URL) {
+        switch url.host() {
+        case "spotify-login-callback":
+            spotifyService.handleURL(spotifyURL: url)
+        default:
+            break
         }
     }
 }

@@ -58,13 +58,11 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
         Mood(emoji: "🤔", label: "Thoughtful")
     ]
     
-    let musicStreamServices: [any MusicStreamService] = [
-        SpotifyStreamService(),
-        AppleMusicStreamService(),
-        YouTubeMusicStreamService()
-    ]
+    let musicStreamServices: [any MusicStreamService]
     
-    init() {
+    init(musicStreamServices: [any MusicStreamService]) {
+        self.musicStreamServices = musicStreamServices
+        
         $selectedMood
             .sink(receiveValue: { [weak self]  in
                 self?.isShowPlaylists = $0 != nil

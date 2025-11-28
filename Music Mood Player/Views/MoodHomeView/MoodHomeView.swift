@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
+    
     @ObservedObject private(set) var viewModel: ViewModel
     
     @State private var windowSize: CGSize = CGSize(width: 140, height: 200)
@@ -124,6 +125,8 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
 }
 
 #Preview {
-    let viewModel = MoodHomeViewModel()
+    let viewModel = MoodHomeViewModel(musicStreamServices: [
+        SpotifyStreamService()
+    ])
     MoodHomeView(viewModel: viewModel)
 }
