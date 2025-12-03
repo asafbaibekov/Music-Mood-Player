@@ -22,6 +22,8 @@ protocol MusicStreamService: Identifiable {
     func login()
     
     func logout()
+    
+    func loadPlaylists()
 }
 
 extension MusicStreamService {

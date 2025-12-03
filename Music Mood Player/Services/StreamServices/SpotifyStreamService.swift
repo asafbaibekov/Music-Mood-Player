@@ -41,6 +41,10 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
         self.isLoggedInSubject.value = false
         print("\(name) logged out")
     }
+    
+    func loadPlaylists() {
+        
+    }
 }
 
 extension SpotifyStreamService: SPTSessionManagerDelegate {

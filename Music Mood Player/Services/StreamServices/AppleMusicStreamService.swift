@@ -26,4 +26,8 @@ final class AppleMusicStreamService: MusicStreamService {
         self.isLoggedInSubject.value = false
         print("\(name) logged out")
     }
+    
+    func loadPlaylists() {
+        
+    }
 }
