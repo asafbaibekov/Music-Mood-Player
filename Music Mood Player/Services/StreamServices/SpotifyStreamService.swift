@@ -31,6 +31,10 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
         return SPTSessionManager(configuration: configuration, delegate: self)
     }()
     
+    private var pendingRequests = [() async throws -> Void]()
+    
+    private var isRenewing = false
+    
     init(sessionStorable: AnyStorable<SPTSession>) {
         self.sessionStorable = sessionStorable
         super.init()
@@ -59,7 +63,57 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
     }
     
     func loadPlaylists() {
-        self.sptSessionManager.renewSession()
+        Task {
+            let params = [
+                URLQueryItem(name: "q", value: "genre:\"rock\""),
+                URLQueryItem(name: "type", value: "playlist"),
+                URLQueryItem(name: "limit", value: "20")
+            ]
+            try await self.spotifyAPIRequest(endpoint: .search, params: params)
+        }
+    }
+}
+
+private extension SpotifyStreamService {
+    
+    enum Endpoint: String {
+        case search
+    }
+    
+    func spotifyAPIRequest(endpoint: Endpoint, params: [URLQueryItem]) async throws {
+        
+        let accessToken = self.sptSessionManager.session?.accessToken ?? ""
+        
+        guard var urlComponents = URLComponents(string: "https://api.spotify.com/v1/\(endpoint)") else { return }
+        urlComponents.queryItems = params
+        
+        var request = URLRequest(url: urlComponents.url!)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        let (data, _) = try await URLSession.shared.data(for: request)
+        
+        if let error = try? JSONDecoder().decode(SpotifyError.self, from: data) {
+            switch error {
+            case .expiredAccessToken:
+                pendingRequests.append({ [weak self] in
+                    try await self?.spotifyAPIRequest(endpoint: endpoint, params: params)
+                })
+                if !isRenewing {
+                    isRenewing = true
+                    sptSessionManager.renewSession()
+                }
+                break
+            case .loginNeeded:
+                break
+            case .unknown(let status, let message):
+                print("Spotify error: \(status) – \(message)")
+            }
+            return
+        }
+        
+        let dataString = String(data: data, encoding: .utf8) ?? "No data"
+        print("dataString", dataString)
     }
 }
 
@@ -72,10 +126,22 @@ extension SpotifyStreamService: SPTSessionManagerDelegate {
     
     func sessionManager(manager: SPTSessionManager, didFailWith error: any Error) {
         self.isLoggedInSubject.value = false
+        self.pendingRequests.removeAll()
+        self.isRenewing = false
     }
     
     func sessionManager(manager: SPTSessionManager, didRenew session: SPTSession) {
         self.isLoggedInSubject.value = true
         try? self.sessionStorable.save(session)
+        
+        let requests = self.pendingRequests
+        self.pendingRequests.removeAll()
+        self.isRenewing = false
+
+        Task {
+            for req in requests {
+                try? await req()
+            }
+        }
     }
 }
