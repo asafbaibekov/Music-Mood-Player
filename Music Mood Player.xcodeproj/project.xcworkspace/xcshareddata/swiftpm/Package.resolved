@@ -1,5 +1,5 @@
 {
-  "originHash" : "1c78ec4c864394dd305bb035534c9f8aa226121d92b714af20bc936977fff195",
+  "originHash" : "17bc3f7eeaaf7493c56b8ece073dbf96e8f9c6ac5dc5ca7764b740b2e004f9b1",
   "pins" : [
     {
       "identity" : "ios-sdk",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "0b3e54771738ad5e64f22c8e5e19ca76d6becc6c",
         "version" : "5.0.1"
+      }
+    },
+    {
+      "identity" : "valet",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/square/Valet",
+      "state" : {
+        "revision" : "05c9e514fbd352a6866877ca31326b4e0b7d6d01",
+        "version" : "5.0.0"
       }
     }
   ],
