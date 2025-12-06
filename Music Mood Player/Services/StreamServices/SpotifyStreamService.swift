@@ -19,6 +19,8 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
     
     let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
     
+    let sessionStorable: AnyStorable<SPTSession>
+    
     lazy var sptSessionManager: SPTSessionManager = {
         let configuration = SPTConfiguration(
             clientID: "2f4647040f594d49a3d0c8369090182c",
@@ -28,6 +30,17 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
         configuration.tokenRefreshURL = URL(string: "https://c7x2hf5hzrpsqvzw5int2t65pa0ncjgz.lambda-url.eu-west-1.on.aws/")!
         return SPTSessionManager(configuration: configuration, delegate: self)
     }()
+    
+    init(sessionStorable: AnyStorable<SPTSession>) {
+        self.sessionStorable = sessionStorable
+        super.init()
+        if let session = try? sessionStorable.load(), self.sptSessionManager.session == nil {
+            self.sptSessionManager.session = session
+            self.isLoggedInSubject.value = true
+        } else if self.sptSessionManager.session != nil {
+            self.isLoggedInSubject.value = true
+        }
+    }
     
     func handleURL(spotifyURL url: URL) {
         let flag = sptSessionManager.application(UIApplication.shared, open: url, options: [:])
@@ -41,29 +54,28 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
     
     func logout() {
         self.isLoggedInSubject.value = false
-        print("\(name) logged out")
+        self.sptSessionManager.session = nil
+        try? self.sessionStorable.delete()
     }
     
     func loadPlaylists() {
-        
+        self.sptSessionManager.renewSession()
     }
 }
 
 extension SpotifyStreamService: SPTSessionManagerDelegate {
     
     func sessionManager(manager: SPTSessionManager, didInitiate session: SPTSession) {
-        print(#function)
         self.isLoggedInSubject.value = true
-        print("\(name) logged in")
+        try? self.sessionStorable.save(session)
     }
     
     func sessionManager(manager: SPTSessionManager, didFailWith error: any Error) {
-        print(#function)
         self.isLoggedInSubject.value = false
     }
     
     func sessionManager(manager: SPTSessionManager, didRenew session: SPTSession) {
-        print(#function)
         self.isLoggedInSubject.value = true
+        try? self.sessionStorable.save(session)
     }
 }

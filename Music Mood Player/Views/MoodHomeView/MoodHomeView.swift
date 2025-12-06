@@ -126,7 +126,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
 
 #Preview {
     let viewModel = MoodHomeViewModel(musicStreamServices: [
-        SpotifyStreamService()
+        SpotifyStreamService(sessionStorable: SpotifySessionStorable().eraseToAnyStorable())
     ])
     MoodHomeView(viewModel: viewModel)
 }

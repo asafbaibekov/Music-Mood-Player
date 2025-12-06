@@ -15,7 +15,7 @@ struct MusicMoodPlayerApp: App {
     let viewModel: MoodHomeViewModel
     
     init() {
-        self.spotifyService = SpotifyStreamService()
+        self.spotifyService = SpotifyStreamService(sessionStorable: SpotifySessionStorable().eraseToAnyStorable())
         self.viewModel = MoodHomeViewModel(musicStreamServices: [
             spotifyService
         ])
