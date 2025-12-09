@@ -24,7 +24,12 @@ struct SuggestedPlaylistsSection: View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(0..<23, id: \.self) { index in
-                    PlaylistCell(index: index, playlistName: "Playlist name", creatorName: "Creator name")
+                    PlaylistCell(
+                        viewModel: PlaylistCellViewModel(
+                            title: "Playlist name",
+                            subtitle: "Creator name"
+                        )
+                    )
                 }
             }
             .padding(.bottom, bottomInset)

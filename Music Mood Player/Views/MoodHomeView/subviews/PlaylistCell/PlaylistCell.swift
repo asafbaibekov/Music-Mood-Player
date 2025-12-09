@@ -9,11 +9,7 @@ import SwiftUI
 
 struct PlaylistCell: View {
     
-    let index: Int
-    
-    let playlistName: String
-    
-    let creatorName: String
+    let viewModel: PlaylistCellViewModel
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -21,24 +17,14 @@ struct PlaylistCell: View {
                 RoundedRectangle(cornerRadius: 18)
                     .fill(.green.opacity(0.5))
                     .frame(height: proxy.size.width)
-                    .overlay(
-                        VStack {
-                            Image(systemName: "music.note.list")
-                                .font(.largeTitle)
-                                .foregroundColor(.white)
-                            Text("Playlist \(index + 1)")
-                                .foregroundColor(.white)
-                                .font(.subheadline.bold())
-                        }
-                    )
             }
             .aspectRatio(1, contentMode: .fit)
             
-            Text(playlistName)
+            Text(viewModel.title)
                 .font(.system(size: 16, weight: .semibold))
                 .lineLimit(1)
                 .padding(.horizontal, 4)
-            Text(creatorName)
+            Text(viewModel.subtitle)
                 .font(.system(size: 14, weight: .semibold))
                 .minimumScaleFactor(0.9)
                 .lineLimit(1)
@@ -49,6 +35,7 @@ struct PlaylistCell: View {
 }
 
 #Preview {
-    PlaylistCell(index: 0, playlistName: "Title", creatorName: "Subtitle")
+    let viewModel = PlaylistCellViewModel(title: "Title", subtitle: "Subtitle")
+    PlaylistCell(viewModel: viewModel)
         .frame(width: 200)
 }
