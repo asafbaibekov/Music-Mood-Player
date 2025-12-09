@@ -47,3 +47,8 @@ struct PlaylistCell: View {
         }
     }
 }
+
+#Preview {
+    PlaylistCell(index: 0, playlistName: "Title", creatorName: "Subtitle")
+        .frame(width: 200)
+}

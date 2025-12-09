@@ -47,3 +47,7 @@ struct SuggestedPlaylistsSection: View {
         .padding(.horizontal, 20)
     }
 }
+
+#Preview {
+    SuggestedPlaylistsSection(bottomInset: 0)
+}
