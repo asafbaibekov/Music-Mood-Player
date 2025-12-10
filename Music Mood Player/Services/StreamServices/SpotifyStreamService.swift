@@ -31,7 +31,7 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
         return SPTSessionManager(configuration: configuration, delegate: self)
     }()
     
-    private var pendingRequests = [() async throws -> Void]()
+    private var pendingContinuations = [CheckedContinuation<SpotifyPlaylistsResponse?, Error>]()
     
     private var isRenewing = false
     
@@ -69,7 +69,15 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
                 URLQueryItem(name: "type", value: "playlist"),
                 URLQueryItem(name: "limit", value: "20")
             ]
-            try await self.spotifyAPIRequest(endpoint: .search, params: params)
+            let spotifyPlaylistsResponse = try await self.spotifyAPIRequest(endpoint: .search, params: params)
+            print("Rpotify Response", spotifyPlaylistsResponse.map({ "\($0)" }) ?? "nil")
+            
+            guard let playlistCellViewModels = spotifyPlaylistsResponse?.items
+                .map({ item in
+                    PlaylistCellViewModel(title: item.name ?? "", subtitle: item.itemDescription ?? "", imageURL: item.images?.first?.url)
+                }) else { return }
+            
+            print("Spotify PlaylistCellViewModels", playlistCellViewModels)
         }
     }
 }
@@ -80,11 +88,11 @@ private extension SpotifyStreamService {
         case search
     }
     
-    func spotifyAPIRequest(endpoint: Endpoint, params: [URLQueryItem]) async throws {
+    func spotifyAPIRequest(endpoint: Endpoint, params: [URLQueryItem]) async throws -> SpotifyPlaylistsResponse? {
         
         let accessToken = self.sptSessionManager.session?.accessToken ?? ""
         
-        guard var urlComponents = URLComponents(string: "https://api.spotify.com/v1/\(endpoint)") else { return }
+        var urlComponents = URLComponents(string: "https://api.spotify.com/v1/\(endpoint)")!
         urlComponents.queryItems = params
         
         var request = URLRequest(url: urlComponents.url!)
@@ -96,24 +104,21 @@ private extension SpotifyStreamService {
         if let error = try? JSONDecoder().decode(SpotifyError.self, from: data) {
             switch error {
             case .expiredAccessToken:
-                pendingRequests.append({ [weak self] in
-                    try await self?.spotifyAPIRequest(endpoint: endpoint, params: params)
-                })
-                if !isRenewing {
+                return try await withCheckedThrowingContinuation { continuation in
+                    pendingContinuations.append(continuation)
+                    guard !isRenewing else { return }
                     isRenewing = true
                     sptSessionManager.renewSession()
                 }
-                break
             case .loginNeeded:
-                break
+                throw URLError(.badServerResponse)
             case .unknown(let status, let message):
                 print("Spotify error: \(status) – \(message)")
+                throw URLError(.badServerResponse)
             }
-            return
         }
         
-        let dataString = String(data: data, encoding: .utf8) ?? "No data"
-        print("dataString", dataString)
+        return try JSONDecoder().decode(SpotifyPlaylistsResponse.self, from: data)
     }
 }
 
@@ -126,7 +131,7 @@ extension SpotifyStreamService: SPTSessionManagerDelegate {
     
     func sessionManager(manager: SPTSessionManager, didFailWith error: any Error) {
         self.isLoggedInSubject.value = false
-        self.pendingRequests.removeAll()
+        self.pendingContinuations.removeAll()
         self.isRenewing = false
     }
     
@@ -134,13 +139,18 @@ extension SpotifyStreamService: SPTSessionManagerDelegate {
         self.isLoggedInSubject.value = true
         try? self.sessionStorable.save(session)
         
-        let requests = self.pendingRequests
-        self.pendingRequests.removeAll()
+        let continuations = self.pendingContinuations
+        self.pendingContinuations.removeAll()
         self.isRenewing = false
 
         Task {
-            for req in requests {
-                try? await req()
+            for continuation in continuations {
+                do {
+                    let result = try await self.spotifyAPIRequest(endpoint: .search, params: [])
+                    continuation.resume(returning: result)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
             }
         }
     }
