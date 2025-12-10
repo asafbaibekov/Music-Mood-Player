@@ -27,7 +27,8 @@ struct SuggestedPlaylistsSection: View {
                     PlaylistCell(
                         viewModel: PlaylistCellViewModel(
                             title: "Playlist name",
-                            subtitle: "Creator name"
+                            subtitle: "Creator name",
+                            imageURL: nil
                         )
                     )
                 }

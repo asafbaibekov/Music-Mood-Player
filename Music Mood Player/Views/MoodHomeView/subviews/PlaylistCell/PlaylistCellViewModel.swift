@@ -7,14 +7,24 @@
 
 import Foundation
 
-class PlaylistCellViewModel: ObservableObject {
+protocol PlaylistCellViewModelProtocol: Identifiable {
     
-    let title: String
+    var id: String { get }
     
-    let subtitle: String
+    var title: String? { get }
     
-    init(title: String, subtitle: String) {
-        self.title = title
-        self.subtitle = subtitle
-    }
+    var subtitle: String? { get }
+    
+    var imageURL: URL? { get }
+}
+
+struct PlaylistCellViewModel: PlaylistCellViewModelProtocol {
+    
+    let id = UUID().uuidString
+    
+    let title: String?
+    
+    let subtitle: String?
+    
+    let imageURL: URL?
 }

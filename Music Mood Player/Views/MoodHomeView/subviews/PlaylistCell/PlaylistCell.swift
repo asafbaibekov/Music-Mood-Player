@@ -20,11 +20,11 @@ struct PlaylistCell: View {
             }
             .aspectRatio(1, contentMode: .fit)
             
-            Text(viewModel.title)
+            Text(viewModel.title ?? "")
                 .font(.system(size: 16, weight: .semibold))
                 .lineLimit(1)
                 .padding(.horizontal, 4)
-            Text(viewModel.subtitle)
+            Text(viewModel.subtitle ?? "")
                 .font(.system(size: 14, weight: .semibold))
                 .minimumScaleFactor(0.9)
                 .lineLimit(1)
@@ -35,7 +35,7 @@ struct PlaylistCell: View {
 }
 
 #Preview {
-    let viewModel = PlaylistCellViewModel(title: "Title", subtitle: "Subtitle")
+    let viewModel = PlaylistCellViewModel(title: "Title", subtitle: "Subtitle", imageURL: nil)
     PlaylistCell(viewModel: viewModel)
         .frame(width: 200)
 }
