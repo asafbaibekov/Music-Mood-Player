@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct SpotifyItem: Codable, CustomStringConvertible {
+struct SpotifyItem: Codable, CustomStringConvertible, Identifiable {
     
-    let id: String?
+    let id: String
     let name: String?
     let itemDescription: String?
     let type: String?
@@ -40,7 +40,7 @@ struct SpotifyItem: Codable, CustomStringConvertible {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: ItemCodingKeys.self)
 
-        self.id = try container.decodeIfPresent(String.self, forKey: .id)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString
         self.name = try container.decodeIfPresent(String.self, forKey: .name)
         self.itemDescription = try container.decodeIfPresent(String.self, forKey: .itemDescription)
         self.type = try container.decodeIfPresent(String.self, forKey: .type)
@@ -57,7 +57,7 @@ struct SpotifyItem: Codable, CustomStringConvertible {
     }
     
     init(id: String?, name: String?, itemDescription: String?, images: [Image]?, itemPublic: Bool?, tracks: Tracks?, type: String?, href: URL?, spotify: URL?) {
-        self.id = id
+        self.id = id ?? UUID().uuidString
         self.name = name
         self.itemDescription = itemDescription
         self.images = images
@@ -114,5 +114,20 @@ struct SpotifyItem: Codable, CustomStringConvertible {
             href: URL(string: "https://api.spotify.com/v1/playlists/3lRvb9RIb0MyUTU4O0IZAv"),
             spotify: URL(string: "https://open.spotify.com/playlist/3lRvb9RIb0MyUTU4O0IZAv")
         )
+    }
+}
+
+extension SpotifyItem: PlaylistCellViewModelProtocol {
+    
+    var title: String? {
+        self.name
+    }
+    
+    var subtitle: String? {
+        self.itemDescription
+    }
+    
+    var imageURL: URL? {
+        self.images?.first?.url
     }
 }
