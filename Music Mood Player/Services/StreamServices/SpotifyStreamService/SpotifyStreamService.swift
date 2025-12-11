@@ -50,7 +50,7 @@ final class SpotifyStreamService: MusicStreamService {
             let params = [
                 URLQueryItem(name: "q", value: "genre:\"rock\""),
                 URLQueryItem(name: "type", value: "playlist"),
-                URLQueryItem(name: "limit", value: "20")
+                URLQueryItem(name: "limit", value: "10")
             ]
             let spotifyPlaylistsResponse = try await self.spotifyRequestManager.performRequest(endpoint: .search, params: params)
             
