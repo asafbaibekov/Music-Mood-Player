@@ -11,59 +11,52 @@ import Combine
 import SpotifyiOS
 import UIKit
 
-final class SpotifyStreamService: NSObject, MusicStreamService {
+final class SpotifyStreamService: MusicStreamService {
     
     var name: String = "Spotify"
     
     var icon: ImageResource = Icons.Custom.spotify.imageResource
     
-    private let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
+    let isLoggedInPublisher: AnyPublisher<Bool, Never>
     
-    private(set) lazy var isLoggedInPublisher: AnyPublisher<Bool, Never> = {
-        self.isLoggedInSubject.eraseToAnyPublisher()
-    }()
-    
-    let sessionStorable: AnyStorable<SPTSession>
-    
-    lazy var sptSessionManager: SPTSessionManager = {
-        let configuration = SPTConfiguration(
-            clientID: "2f4647040f594d49a3d0c8369090182c",
-            redirectURL: URL(string: "musicmoodplayer://spotify-login-callback")!
-        )
-        configuration.tokenSwapURL = URL(string: "https://u3irfuz4i3lbxzrux24zytjw7m0dwzva.lambda-url.eu-west-1.on.aws/")!
-        configuration.tokenRefreshURL = URL(string: "https://c7x2hf5hzrpsqvzw5int2t65pa0ncjgz.lambda-url.eu-west-1.on.aws/")!
-        return SPTSessionManager(configuration: configuration, delegate: self)
-    }()
+    private let spotifyAuthManager: SpotifyAuthManager
     
     private var pendingContinuations = [CheckedContinuation<SpotifyPlaylistsResponse?, Error>]()
     
     private var isRenewing = false
     
+    private var cancellables = Set<AnyCancellable>()
+    
     init(sessionStorable: AnyStorable<SPTSession>) {
-        self.sessionStorable = sessionStorable
-        super.init()
-        if let session = try? sessionStorable.load(), self.sptSessionManager.session == nil {
-            self.sptSessionManager.session = session
-            self.isLoggedInSubject.value = true
-        } else if self.sptSessionManager.session != nil {
-            self.isLoggedInSubject.value = true
-        }
+        self.spotifyAuthManager = SpotifyAuthManager(sessionStorable: sessionStorable)
+        self.isLoggedInPublisher = self.spotifyAuthManager.isLoggedInPublisher
+        
+        self.spotifyAuthManager
+            .renewSessionPublisher
+            .sink(receiveValue: { [weak self] in
+                self?.onRenewSession()
+            })
+            .store(in: &cancellables)
+        
+        self.spotifyAuthManager
+            .authErrorPublisher
+            .sink(receiveValue: { [weak self] _ in
+                self?.pendingContinuations.removeAll()
+                self?.isRenewing = false
+            })
+            .store(in: &cancellables)
     }
     
     func handleURL(spotifyURL url: URL) {
-        let flag = sptSessionManager.application(UIApplication.shared, open: url, options: [:])
-        print("\(#function) \(flag)")
+        self.spotifyAuthManager.handleURL(spotifyURL: url)
     }
     
     func login() {
-        let scopes: SPTScope = [.playlistReadCollaborative, .playlistReadPrivate, .appRemoteControl]
-        self.sptSessionManager.initiateSession(with: scopes, options: .default, campaign: nil)
+        self.spotifyAuthManager.login()
     }
     
     func logout() {
-        self.isLoggedInSubject.value = false
-        self.sptSessionManager.session = nil
-        try? self.sessionStorable.delete()
+        self.spotifyAuthManager.logout()
     }
     
     func loadPlaylists() {
@@ -94,7 +87,7 @@ private extension SpotifyStreamService {
     
     func spotifyAPIRequest(endpoint: Endpoint, params: [URLQueryItem]) async throws -> SpotifyPlaylistsResponse? {
         
-        let accessToken = self.sptSessionManager.session?.accessToken ?? ""
+        let accessToken = self.spotifyAuthManager.accessToken
         
         var urlComponents = URLComponents(string: "https://api.spotify.com/v1/\(endpoint)")!
         urlComponents.queryItems = params
@@ -112,7 +105,7 @@ private extension SpotifyStreamService {
                     pendingContinuations.append(continuation)
                     guard !isRenewing else { return }
                     isRenewing = true
-                    sptSessionManager.renewSession()
+                    self.spotifyAuthManager.renewSession()
                 }
             case .loginNeeded:
                 throw URLError(.badServerResponse)
@@ -124,25 +117,8 @@ private extension SpotifyStreamService {
         
         return try JSONDecoder().decode(SpotifyPlaylistsResponse.self, from: data)
     }
-}
-
-extension SpotifyStreamService: SPTSessionManagerDelegate {
     
-    func sessionManager(manager: SPTSessionManager, didInitiate session: SPTSession) {
-        self.isLoggedInSubject.value = true
-        try? self.sessionStorable.save(session)
-    }
-    
-    func sessionManager(manager: SPTSessionManager, didFailWith error: any Error) {
-        self.isLoggedInSubject.value = false
-        self.pendingContinuations.removeAll()
-        self.isRenewing = false
-    }
-    
-    func sessionManager(manager: SPTSessionManager, didRenew session: SPTSession) {
-        self.isLoggedInSubject.value = true
-        try? self.sessionStorable.save(session)
-        
+    func onRenewSession() {
         let continuations = self.pendingContinuations
         self.pendingContinuations.removeAll()
         self.isRenewing = false
