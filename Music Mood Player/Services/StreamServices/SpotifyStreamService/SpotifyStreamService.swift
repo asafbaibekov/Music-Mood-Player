@@ -21,7 +21,7 @@ final class SpotifyStreamService: MusicStreamService {
     
     private let spotifyAuthManager: SpotifyAuthManager
     
-    private var pendingRequests = [PendingRequest]()
+    private let spotifyRequestManager: SpotifyRequestManager
     
     private var isRenewing = false
     
@@ -30,21 +30,7 @@ final class SpotifyStreamService: MusicStreamService {
     init(sessionStorable: AnyStorable<SPTSession>) {
         self.spotifyAuthManager = SpotifyAuthManager(sessionStorable: sessionStorable)
         self.isLoggedInPublisher = self.spotifyAuthManager.isLoggedInPublisher
-        
-        self.spotifyAuthManager
-            .renewSessionPublisher
-            .sink(receiveValue: { [weak self] in
-                self?.onRenewSession()
-            })
-            .store(in: &cancellables)
-        
-        self.spotifyAuthManager
-            .authErrorPublisher
-            .sink(receiveValue: { [weak self] _ in
-                self?.pendingRequests.removeAll()
-                self?.isRenewing = false
-            })
-            .store(in: &cancellables)
+        self.spotifyRequestManager = SpotifyRequestManager(spotifyAuthManager: spotifyAuthManager)
     }
     
     func handleURL(spotifyURL url: URL) {
@@ -66,7 +52,8 @@ final class SpotifyStreamService: MusicStreamService {
                 URLQueryItem(name: "type", value: "playlist"),
                 URLQueryItem(name: "limit", value: "20")
             ]
-            let spotifyPlaylistsResponse = try await self.spotifyAPIRequest(endpoint: .search, params: params)
+            let spotifyPlaylistsResponse = try await self.spotifyRequestManager.performRequest(endpoint: .search, params: params)
+            
             print("Rpotify Response", spotifyPlaylistsResponse.map({ "\($0)" }) ?? "nil")
             
             guard let playlistCellViewModels = spotifyPlaylistsResponse?.items
@@ -75,69 +62,6 @@ final class SpotifyStreamService: MusicStreamService {
                 }) else { return }
             
             print("Spotify PlaylistCellViewModels", playlistCellViewModels)
-        }
-    }
-}
-
-private extension SpotifyStreamService {
-    
-    private struct PendingRequest {
-        let continuation: CheckedContinuation<SpotifyPlaylistsResponse?, Error>
-        let endpoint: Endpoint
-        let params: [URLQueryItem]
-    }
-    
-    enum Endpoint: String {
-        case search
-    }
-    
-    func spotifyAPIRequest(endpoint: Endpoint, params: [URLQueryItem]) async throws -> SpotifyPlaylistsResponse? {
-        
-        let accessToken = self.spotifyAuthManager.accessToken
-        
-        var urlComponents = URLComponents(string: "https://api.spotify.com/v1/\(endpoint)")!
-        urlComponents.queryItems = params
-        
-        var request = URLRequest(url: urlComponents.url!)
-        request.httpMethod = "GET"
-        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        
-        let (data, _) = try await URLSession.shared.data(for: request)
-        
-        if let error = try? JSONDecoder().decode(SpotifyError.self, from: data) {
-            switch error {
-            case .expiredAccessToken:
-                return try await withCheckedThrowingContinuation { continuation in
-                    pendingRequests.append(PendingRequest(continuation: continuation, endpoint: endpoint, params: params))
-                    guard !isRenewing else { return }
-                    isRenewing = true
-                    self.spotifyAuthManager.renewSession()
-                }
-            case .loginNeeded:
-                throw URLError(.badServerResponse)
-            case .unknown(let status, let message):
-                print("Spotify error: \(status) – \(message)")
-                throw URLError(.badServerResponse)
-            }
-        }
-        
-        return try JSONDecoder().decode(SpotifyPlaylistsResponse.self, from: data)
-    }
-    
-    func onRenewSession() {
-        let pendingRequests = self.pendingRequests
-        self.pendingRequests.removeAll()
-        self.isRenewing = false
-
-        Task {
-            for pendingRequest in pendingRequests {
-                do {
-                    let result = try await self.spotifyAPIRequest(endpoint: pendingRequest.endpoint, params: pendingRequest.params)
-                    pendingRequest.continuation.resume(returning: result)
-                } catch {
-                    pendingRequest.continuation.resume(throwing: error)
-                }
-            }
         }
     }
 }
