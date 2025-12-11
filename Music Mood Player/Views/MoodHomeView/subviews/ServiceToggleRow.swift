@@ -49,7 +49,7 @@ extension MoodHomeView {
         private let service: any MusicStreamService
         
         var isLoggedInPublisher: AnyPublisher<Bool, Never> {
-            self.service.isLoggedInSubject
+            self.service.isLoggedInPublisher
                 .receive(on: DispatchQueue.main)
                 .eraseToAnyPublisher()
         }

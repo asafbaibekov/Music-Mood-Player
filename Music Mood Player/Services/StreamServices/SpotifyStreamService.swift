@@ -17,7 +17,11 @@ final class SpotifyStreamService: NSObject, MusicStreamService {
     
     var icon: ImageResource = Icons.Custom.spotify.imageResource
     
-    let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
+    private let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
+    
+    private(set) lazy var isLoggedInPublisher: AnyPublisher<Bool, Never> = {
+        self.isLoggedInSubject.eraseToAnyPublisher()
+    }()
     
     let sessionStorable: AnyStorable<SPTSession>
     

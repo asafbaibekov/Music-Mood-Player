@@ -17,7 +17,7 @@ protocol MusicStreamService: Identifiable {
     
     var icon: ImageResource { get }
     
-    var isLoggedInSubject: CurrentValueSubject<Bool, Never> { get }
+    var isLoggedInPublisher: AnyPublisher<Bool, Never> { get }
     
     func login()
     

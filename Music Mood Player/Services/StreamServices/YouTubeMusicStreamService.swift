@@ -15,7 +15,11 @@ final class YouTubeMusicStreamService: MusicStreamService {
     
     var icon: ImageResource = Icons.Custom.youtube_music.imageResource
     
-    let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
+    private let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
+    
+    private(set) lazy var isLoggedInPublisher: AnyPublisher<Bool, Never> = {
+        self.isLoggedInSubject.eraseToAnyPublisher()
+    }()
     
     func login() {
         self.isLoggedInSubject.value = true
