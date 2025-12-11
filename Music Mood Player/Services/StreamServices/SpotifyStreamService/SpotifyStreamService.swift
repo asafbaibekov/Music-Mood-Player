@@ -21,7 +21,7 @@ final class SpotifyStreamService: MusicStreamService {
     
     private let spotifyAuthManager: SpotifyAuthManager
     
-    private var pendingContinuations = [CheckedContinuation<SpotifyPlaylistsResponse?, Error>]()
+    private var pendingRequests = [PendingRequest]()
     
     private var isRenewing = false
     
@@ -41,7 +41,7 @@ final class SpotifyStreamService: MusicStreamService {
         self.spotifyAuthManager
             .authErrorPublisher
             .sink(receiveValue: { [weak self] _ in
-                self?.pendingContinuations.removeAll()
+                self?.pendingRequests.removeAll()
                 self?.isRenewing = false
             })
             .store(in: &cancellables)
@@ -81,6 +81,12 @@ final class SpotifyStreamService: MusicStreamService {
 
 private extension SpotifyStreamService {
     
+    private struct PendingRequest {
+        let continuation: CheckedContinuation<SpotifyPlaylistsResponse?, Error>
+        let endpoint: Endpoint
+        let params: [URLQueryItem]
+    }
+    
     enum Endpoint: String {
         case search
     }
@@ -102,7 +108,7 @@ private extension SpotifyStreamService {
             switch error {
             case .expiredAccessToken:
                 return try await withCheckedThrowingContinuation { continuation in
-                    pendingContinuations.append(continuation)
+                    pendingRequests.append(PendingRequest(continuation: continuation, endpoint: endpoint, params: params))
                     guard !isRenewing else { return }
                     isRenewing = true
                     self.spotifyAuthManager.renewSession()
@@ -119,17 +125,17 @@ private extension SpotifyStreamService {
     }
     
     func onRenewSession() {
-        let continuations = self.pendingContinuations
-        self.pendingContinuations.removeAll()
+        let pendingRequests = self.pendingRequests
+        self.pendingRequests.removeAll()
         self.isRenewing = false
 
         Task {
-            for continuation in continuations {
+            for pendingRequest in pendingRequests {
                 do {
-                    let result = try await self.spotifyAPIRequest(endpoint: .search, params: [])
-                    continuation.resume(returning: result)
+                    let result = try await self.spotifyAPIRequest(endpoint: pendingRequest.endpoint, params: pendingRequest.params)
+                    pendingRequest.continuation.resume(returning: result)
                 } catch {
-                    continuation.resume(throwing: error)
+                    pendingRequest.continuation.resume(throwing: error)
                 }
             }
         }
