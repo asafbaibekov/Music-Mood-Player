@@ -27,7 +27,7 @@ enum SpotifyError: Error, Codable, Equatable {
         let message = try errorContainer.decode(String.self, forKey: .message)
 
         switch message {
-        case "No token provided":
+        case "No token provided", "Only valid bearer authentication supported":
             self = .loginNeeded
         case "The access token expired":
             self = .expiredAccessToken
