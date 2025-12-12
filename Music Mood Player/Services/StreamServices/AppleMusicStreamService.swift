@@ -15,11 +15,17 @@ final class AppleMusicStreamService: MusicStreamService {
     
     var icon: ImageResource = Icons.Custom.apple_music.imageResource
     
-    private let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
-    
     private(set) lazy var isLoggedInPublisher: AnyPublisher<Bool, Never> = {
         self.isLoggedInSubject.eraseToAnyPublisher()
     }()
+    
+    private(set) lazy var playlistsStream: AnyPublisher<[any PlaylistCellViewModelProtocol], Never> = {
+        self.playlistsPassthroughSubject.eraseToAnyPublisher()
+    }()
+    
+    private let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
+    
+    private let playlistsPassthroughSubject = PassthroughSubject<[any PlaylistCellViewModelProtocol], Never>()
     
     func login() {
         self.isLoggedInSubject.value = true

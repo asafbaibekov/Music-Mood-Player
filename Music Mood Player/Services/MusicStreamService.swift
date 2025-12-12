@@ -19,6 +19,8 @@ protocol MusicStreamService: Identifiable {
     
     var isLoggedInPublisher: AnyPublisher<Bool, Never> { get }
     
+    var playlistsStream: AnyPublisher<[any PlaylistCellViewModelProtocol], Never> { get }
+    
     func login()
     
     func logout()

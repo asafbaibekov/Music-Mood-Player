@@ -19,9 +19,15 @@ final class SpotifyStreamService: MusicStreamService {
     
     let isLoggedInPublisher: AnyPublisher<Bool, Never>
     
+    private(set) lazy var playlistsStream: AnyPublisher<[any PlaylistCellViewModelProtocol], Never> = {
+        self.playlistsPassthroughSubject.eraseToAnyPublisher()
+    }()
+    
     private let spotifyAuthManager: SpotifyAuthManager
     
     private let spotifyRequestManager: SpotifyRequestManager
+    
+    private let playlistsPassthroughSubject = PassthroughSubject<[any PlaylistCellViewModelProtocol], Never>()
     
     private var cancellables = Set<AnyCancellable>()
     
