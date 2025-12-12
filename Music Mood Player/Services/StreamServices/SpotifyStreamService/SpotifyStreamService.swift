@@ -23,8 +23,6 @@ final class SpotifyStreamService: MusicStreamService {
     
     private let spotifyRequestManager: SpotifyRequestManager
     
-    private var isRenewing = false
-    
     private var cancellables = Set<AnyCancellable>()
     
     init(sessionStorable: AnyStorable<SPTSession>) {
