@@ -14,7 +14,7 @@ final class SpotifyRequestManager {
         case search
     }
     
-    struct PendingRequest {
+    private struct PendingRequest {
         let continuation: CheckedContinuation<SpotifyPlaylistsResponse?, Error>
         let endpoint: Endpoint
         let params: [URLQueryItem]
