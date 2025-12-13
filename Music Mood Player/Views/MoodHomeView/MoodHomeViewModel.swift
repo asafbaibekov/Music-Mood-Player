@@ -21,6 +21,8 @@ protocol MoodHomeViewModelProtocol: ObservableObject {
     
     var selectedMood: Mood? { get set }
     
+    var playlistCellViewModels: [any PlaylistCellViewModelProtocol] { get }
+    
     var facesPublisher: AnyPublisher<[UIImage], Never> { get }
     
     var moods: [Mood] { get }
@@ -40,6 +42,8 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
     @Published var isDetecting: Bool = false
     
     @Published var selectedMood: Mood? = nil
+    
+    @Published private(set) var playlistCellViewModels = [any PlaylistCellViewModelProtocol]()
     
     var facesPublisher: AnyPublisher<[UIImage], Never> {
         self.faceExtractorService.facesPublisher(from: self.cameraViewModel.framePublisher)
@@ -74,6 +78,13 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
             .sink(receiveValue: { [weak self] cameraStatus in
                 self?.isCameraHidden = cameraStatus != .running
             })
+            .store(in: &cancellables)
+        
+        Publishers.MergeMany(musicStreamServices.map(\.playlistsStream))
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] viewModels in
+                self?.playlistCellViewModels += viewModels
+            }
             .store(in: &cancellables)
     }
 }

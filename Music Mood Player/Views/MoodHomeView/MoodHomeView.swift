@@ -28,7 +28,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                     GeometryReader { screenProxy in
                         let screenHeight = screenProxy.size.height
                         if viewModel.isShowPlaylists {
-                            SuggestedPlaylistsSection(bottomInset: peekHeight + 24) {
+                            SuggestedPlaylistsSection(playlistCellViewModels: self.viewModel.playlistCellViewModels, bottomInset: peekHeight + 24) {
                                 guard !isCardClosed else { return }
                                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                                     isCardClosed = true

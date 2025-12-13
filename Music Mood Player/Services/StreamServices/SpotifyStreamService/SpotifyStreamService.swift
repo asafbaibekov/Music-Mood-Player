@@ -56,16 +56,15 @@ final class SpotifyStreamService: MusicStreamService {
                 URLQueryItem(name: "type", value: "playlist"),
                 URLQueryItem(name: "limit", value: "10")
             ]
-            let spotifyPlaylistsResponse = try await self.spotifyRequestManager.performRequest(endpoint: .search, params: params)
             
-            print("Rpotify Response", spotifyPlaylistsResponse.map({ "\($0)" }) ?? "nil")
+            let spotifyPlaylistsResponse = try await self.spotifyRequestManager.performRequest(endpoint: .search, params: params)
             
             guard let playlistCellViewModels = spotifyPlaylistsResponse?.items
                 .map({ item in
                     PlaylistCellViewModel(title: item.name ?? "", subtitle: item.itemDescription ?? "", imageURL: item.images?.first?.url)
                 }) else { return }
             
-            print("Spotify PlaylistCellViewModels", playlistCellViewModels)
+            self.playlistsPassthroughSubject.send(playlistCellViewModels)
         }
     }
 }

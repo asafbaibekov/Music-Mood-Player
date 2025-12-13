@@ -6,17 +6,21 @@
 //
 
 import SwiftUI
+import Kingfisher
 
 struct PlaylistCell: View {
     
-    let viewModel: PlaylistCellViewModel
+    let viewModel: any PlaylistCellViewModelProtocol
     
     var body: some View {
         VStack(alignment: .leading) {
             GeometryReader { proxy in
-                RoundedRectangle(cornerRadius: 18)
-                    .fill(.green.opacity(0.5))
-                    .frame(height: proxy.size.width)
+                GeometryReader { proxy in
+                    KFImage(viewModel.imageURL)
+                        .resizable()
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .cornerRadius(16)
+                }
             }
             .aspectRatio(1, contentMode: .fit)
             
@@ -35,7 +39,6 @@ struct PlaylistCell: View {
 }
 
 #Preview {
-    let viewModel = PlaylistCellViewModel(title: "Title", subtitle: "Subtitle", imageURL: nil)
-    PlaylistCell(viewModel: viewModel)
+    PlaylistCell(viewModel: SpotifyItem.example)
         .frame(width: 200)
 }

@@ -9,6 +9,8 @@ import SwiftUI
 
 struct SuggestedPlaylistsSection: View {
     
+    private(set) var playlistCellViewModels: [any PlaylistCellViewModelProtocol]
+    
     private(set) var bottomInset: CGFloat?
     
     var onSwipeDown: (() -> Void)? = nil
@@ -23,14 +25,8 @@ struct SuggestedPlaylistsSection: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVGrid(columns: columns, spacing: 16) {
-                ForEach(0..<23, id: \.self) { index in
-                    PlaylistCell(
-                        viewModel: PlaylistCellViewModel(
-                            title: "Playlist name",
-                            subtitle: "Creator name",
-                            imageURL: nil
-                        )
-                    )
+                ForEach(self.playlistCellViewModels, id: \.id) { playlistCellViewModel in
+                    PlaylistCell(viewModel: playlistCellViewModel)
                 }
             }
             .padding(.bottom, bottomInset)
@@ -55,5 +51,10 @@ struct SuggestedPlaylistsSection: View {
 }
 
 #Preview {
-    SuggestedPlaylistsSection(bottomInset: 0)
+    let playlistCellViewModels: [PlaylistCellViewModel] = [
+        .init(title: "First Playlist", subtitle: "This is the first playlist in the list", imageURL: nil),
+        .init(title: "Second Playlist", subtitle: "This is the second playlist in the list", imageURL: nil),
+        .init(title: "Third Playlist", subtitle: "This is the third playlist in the list", imageURL: nil)
+    ]
+    SuggestedPlaylistsSection(playlistCellViewModels: playlistCellViewModels, bottomInset: 0)
 }
