@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct SpotifyItem: Codable, CustomStringConvertible, Identifiable {
+struct SpotifyItem: Codable, CustomStringConvertible, Identifiable, Equatable {
     
     let id: String
     let name: String?
@@ -68,7 +68,7 @@ struct SpotifyItem: Codable, CustomStringConvertible, Identifiable {
         self.spotify = spotify
     }
     
-    struct Image: Codable, CustomStringConvertible {
+    struct Image: Codable, CustomStringConvertible, Equatable {
         let url: URL?
         let height: Int?
         let width: Int?
@@ -76,7 +76,7 @@ struct SpotifyItem: Codable, CustomStringConvertible, Identifiable {
         var description: String { autoDescription() }
     }
     
-    struct Tracks: Codable, CustomStringConvertible {
+    struct Tracks: Codable, CustomStringConvertible, Equatable {
         let href: URL?
         let total: Int?
         

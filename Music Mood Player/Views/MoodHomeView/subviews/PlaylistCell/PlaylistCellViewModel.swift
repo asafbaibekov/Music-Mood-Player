@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol PlaylistCellViewModelProtocol: Identifiable {
+protocol PlaylistCellViewModelProtocol: Identifiable, Equatable {
     
     var id: String { get }
     
