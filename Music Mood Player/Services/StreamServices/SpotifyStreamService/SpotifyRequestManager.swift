@@ -16,10 +16,15 @@ final class SpotifyRequestManager {
     
     private struct PendingRequest {
         let continuation: CheckedContinuation<SpotifyPlaylistsResponse?, Error>
-        let endpoint: Endpoint
+        let urlType: URLType
         let params: [URLQueryItem]
     }
-
+    
+    enum URLType {
+        case url(URL?)
+        case endpoint(Endpoint)
+    }
+    
     private var pendingRequests = [PendingRequest]()
     
     private var isRenewing = false
@@ -45,15 +50,25 @@ final class SpotifyRequestManager {
             })
             .store(in: &cancellables)
     }
-
-    func performRequest(endpoint: Endpoint, params: [URLQueryItem]) async throws -> SpotifyPlaylistsResponse? {
+    
+    func performRequest(urlType: URLType, params: [URLQueryItem]) async throws -> SpotifyPlaylistsResponse? {
 
         let accessToken = self.spotifyAuthManager.accessToken
 
-        var components = URLComponents(string: "https://api.spotify.com/v1/\(endpoint)")!
-        components.queryItems = params
+        let url: URL? = {
+            switch urlType {
+            case .url(let url):
+                return url
+            case .endpoint(let endpoint):
+                var components = URLComponents(string: "https://api.spotify.com/v1/\(endpoint)")!
+                components.queryItems = params
+                return components.url
+            }
+        }()
+        
+        guard let url else { return nil }
 
-        var request = URLRequest(url: components.url!)
+        var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
 
@@ -63,7 +78,7 @@ final class SpotifyRequestManager {
             switch error {
             case .expiredAccessToken:
                 return try await withCheckedThrowingContinuation { continuation in
-                    pendingRequests.append(PendingRequest(continuation: continuation, endpoint: endpoint, params: params))
+                    pendingRequests.append(PendingRequest(continuation: continuation, urlType: urlType, params: params))
                     guard !isRenewing else { return }
                     isRenewing = true
                     self.spotifyAuthManager.renewSession()
@@ -90,7 +105,7 @@ private extension SpotifyRequestManager {
         Task {
             for pendingRequest in pendingRequests {
                 do {
-                    let result = try await self.performRequest(endpoint: pendingRequest.endpoint, params: pendingRequest.params)
+                    let result: SpotifyPlaylistsResponse? = try await self.performRequest(urlType: pendingRequest.urlType, params: pendingRequest.params)
                     pendingRequest.continuation.resume(returning: result)
                 } catch {
                     pendingRequest.continuation.resume(throwing: error)

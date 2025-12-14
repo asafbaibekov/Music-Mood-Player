@@ -31,6 +31,8 @@ final class SpotifyStreamService: MusicStreamService {
     
     private var cancellables = Set<AnyCancellable>()
     
+    private var currentSpotifyPlaylistsResponse: SpotifyPlaylistsResponse?
+    
     init(sessionStorable: AnyStorable<SPTSession>) {
         self.spotifyAuthManager = SpotifyAuthManager(sessionStorable: sessionStorable)
         self.isLoggedInPublisher = self.spotifyAuthManager.isLoggedInPublisher
@@ -51,20 +53,32 @@ final class SpotifyStreamService: MusicStreamService {
     
     func loadPlaylists() {
         Task {
-            let params = [
-                URLQueryItem(name: "q", value: "genre:\"rock\""),
-                URLQueryItem(name: "type", value: "playlist"),
-                URLQueryItem(name: "limit", value: "10")
-            ]
+            self.currentSpotifyPlaylistsResponse = try await loadNextPage()
             
-            let spotifyPlaylistsResponse = try await self.spotifyRequestManager.performRequest(endpoint: .search, params: params)
-            
-            guard let playlistCellViewModels = spotifyPlaylistsResponse?.items
+            guard let playlistCellViewModels = self.currentSpotifyPlaylistsResponse?.items
                 .map({ item in
                     PlaylistCellViewModel(title: item.name ?? "", subtitle: item.itemDescription ?? "", imageURL: item.images?.first?.url)
                 }) else { return }
             
             self.playlistsPassthroughSubject.send(playlistCellViewModels)
+        }
+    }
+}
+
+private extension SpotifyStreamService {
+    
+    func loadNextPage() async throws -> SpotifyPlaylistsResponse? {
+        
+        if let currentResponse = self.currentSpotifyPlaylistsResponse {
+            let next = currentResponse.next
+            return try await self.spotifyRequestManager.performRequest(urlType: .url(next), params: [])
+        } else {
+            let params = [
+                URLQueryItem(name: "q", value: "genre:\"rock\""),
+                URLQueryItem(name: "type", value: "playlist"),
+                URLQueryItem(name: "limit", value: "5")
+            ]
+            return try await self.spotifyRequestManager.performRequest(urlType: .endpoint(.search), params: params)
         }
     }
 }
