@@ -84,7 +84,7 @@ final class SpotifyRequestManager {
                     self.spotifyAuthManager.renewSession()
                 }
             case .loginNeeded:
-                throw URLError(.badServerResponse)
+                throw SpotifyError.loginNeeded
             case .unknown(let status, let message):
                 print("Spotify error: \(status) – \(message)")
                 throw URLError(.badServerResponse)
