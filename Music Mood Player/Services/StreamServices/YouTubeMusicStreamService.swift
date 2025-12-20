@@ -19,13 +19,7 @@ final class YouTubeMusicStreamService: MusicStreamService {
         self.isLoggedInSubject.eraseToAnyPublisher()
     }()
     
-    private(set) lazy var playlistsStream: AnyPublisher<[any PlaylistCellViewModelProtocol], Never> = {
-        self.playlistsPassthroughSubject.eraseToAnyPublisher()
-    }()
-    
     private let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
-    
-    private let playlistsPassthroughSubject = PassthroughSubject<[any PlaylistCellViewModelProtocol], Never>()
     
     func login() {
         self.isLoggedInSubject.value = true
@@ -37,7 +31,7 @@ final class YouTubeMusicStreamService: MusicStreamService {
         print("\(name) logged out")
     }
     
-    func loadPlaylists() {
-        
+    func loadPlaylists() async throws -> [any PlaylistCellViewModelProtocol] {
+        return []
     }
 }

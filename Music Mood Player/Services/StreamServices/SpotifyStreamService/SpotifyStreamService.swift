@@ -19,15 +19,9 @@ final class SpotifyStreamService: MusicStreamService {
     
     let isLoggedInPublisher: AnyPublisher<Bool, Never>
     
-    private(set) lazy var playlistsStream: AnyPublisher<[any PlaylistCellViewModelProtocol], Never> = {
-        self.playlistsPassthroughSubject.eraseToAnyPublisher()
-    }()
-    
     private let spotifyAuthManager: SpotifyAuthManager
     
     private let spotifyRequestManager: SpotifyRequestManager
-    
-    private let playlistsPassthroughSubject = PassthroughSubject<[any PlaylistCellViewModelProtocol], Never>()
     
     private var cancellables = Set<AnyCancellable>()
     
@@ -51,17 +45,15 @@ final class SpotifyStreamService: MusicStreamService {
         self.spotifyAuthManager.logout()
     }
     
-    func loadPlaylists() {
-        Task {
-            self.currentSpotifyPlaylistsResponse = try await loadNextPage()
-            
-            guard let playlistCellViewModels = self.currentSpotifyPlaylistsResponse?.items
-                .map({ item in
-                    PlaylistCellViewModel(title: item.name ?? "", subtitle: item.itemDescription ?? "", imageURL: item.images?.first?.url)
-                }) else { return }
-            
-            self.playlistsPassthroughSubject.send(playlistCellViewModels)
-        }
+    func loadPlaylists() async throws -> [any PlaylistCellViewModelProtocol] {
+        self.currentSpotifyPlaylistsResponse = try await loadNextPage()
+        
+        guard let playlistCellViewModels = self.currentSpotifyPlaylistsResponse?.items
+            .map({ item in
+                PlaylistCellViewModel(title: item.name ?? "", subtitle: item.itemDescription ?? "", imageURL: item.images?.first?.url)
+            }) else { return [] }
+        
+        return playlistCellViewModels
     }
 }
 

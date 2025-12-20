@@ -68,8 +68,17 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
         self.musicStreamServices = musicStreamServices
         
         $selectedMood
-            .sink(receiveValue: { [weak self]  in
+            .handleEvents(receiveOutput: { [weak self] in
                 self?.isShowPlaylists = $0 != nil
+            })
+            .compactMap({ $0 })
+            .sink(receiveValue: { [weak self] _ in
+                Task { [weak self] in
+                    let viewModels = await self?.loadPlaylists()
+                    await MainActor.run { [weak self] in
+                        self?.playlistCellViewModels += viewModels ?? []
+                    }
+                }
             })
             .store(in: &cancellables)
         
@@ -79,12 +88,30 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
                 self?.isCameraHidden = cameraStatus != .running
             })
             .store(in: &cancellables)
-        
-        Publishers.MergeMany(musicStreamServices.map(\.playlistsStream))
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] viewModels in
-                self?.playlistCellViewModels += viewModels
+    }
+    
+    func loadPlaylists() async -> [any PlaylistCellViewModelProtocol] {
+        let results = await withTaskGroup(of: Result<[any PlaylistCellViewModelProtocol], Error>.self) { [weak self] group in
+            guard let self else { return [Result<[any PlaylistCellViewModelProtocol], Error>]() }
+            for service in self.musicStreamServices {
+                group.addTask {
+                    return await Result {
+                        try await service.loadPlaylists()
+                    }
+                }
             }
-            .store(in: &cancellables)
+            
+            var results = [Result<[any PlaylistCellViewModelProtocol], Error>]()
+            for await result in group {
+                results.append(result)
+            }
+            return results
+        }
+        
+        let viewModels = results
+            .compactMap { try? $0.get() }
+            .flatMap { $0 }
+        
+        return viewModels
     }
 }
