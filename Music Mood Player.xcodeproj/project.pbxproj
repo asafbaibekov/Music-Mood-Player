@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2D126EEC2ED8E07B000A2477 /* SpotifyiOS in Frameworks */ = {isa = PBXBuildFile; productRef = 2D126EEB2ED8E07B000A2477 /* SpotifyiOS */; };
 		2D1271292EE4403A000A2477 /* Valet in Frameworks */ = {isa = PBXBuildFile; productRef = 2D1271282EE4403A000A2477 /* Valet */; };
+		2D15F9922EF734B4000BF1DA /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 2D15F9912EF734B4000BF1DA /* GoogleSignIn */; };
 		2D59054D2EE822B500FF6524 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 2D59054C2EE822B500FF6524 /* Kingfisher */; };
 /* End PBXBuildFile section */
 
@@ -30,6 +31,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2D59054D2EE822B500FF6524 /* Kingfisher in Frameworks */,
+				2D15F9922EF734B4000BF1DA /* GoogleSignIn in Frameworks */,
 				2D126EEC2ED8E07B000A2477 /* SpotifyiOS in Frameworks */,
 				2D1271292EE4403A000A2477 /* Valet in Frameworks */,
 			);
@@ -77,6 +79,7 @@
 				2D126EEB2ED8E07B000A2477 /* SpotifyiOS */,
 				2D1271282EE4403A000A2477 /* Valet */,
 				2D59054C2EE822B500FF6524 /* Kingfisher */,
+				2D15F9912EF734B4000BF1DA /* GoogleSignIn */,
 			);
 			productName = "Music Mood Player";
 			productReference = 2D7760E02E807108006DFCAB /* Music Mood Player.app */;
@@ -110,6 +113,7 @@
 				2D126EEA2ED8E07B000A2477 /* XCRemoteSwiftPackageReference "ios-sdk" */,
 				2D1271272EE4403A000A2477 /* XCRemoteSwiftPackageReference "Valet" */,
 				2D59054B2EE822B500FF6524 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				2D15F9902EF734B4000BF1DA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2D7760E12E807108006DFCAB /* Products */;
@@ -363,6 +367,14 @@
 				minimumVersion = 5.0.0;
 			};
 		};
+		2D15F9902EF734B4000BF1DA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
 		2D59054B2EE822B500FF6524 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/onevcat/Kingfisher";
@@ -383,6 +395,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 2D1271272EE4403A000A2477 /* XCRemoteSwiftPackageReference "Valet" */;
 			productName = Valet;
+		};
+		2D15F9912EF734B4000BF1DA /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 2D15F9902EF734B4000BF1DA /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 		2D59054C2EE822B500FF6524 /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;
