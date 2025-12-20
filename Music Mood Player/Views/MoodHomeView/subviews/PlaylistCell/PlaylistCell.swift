@@ -15,11 +15,36 @@ struct PlaylistCell: View {
     var body: some View {
         VStack(alignment: .leading) {
             GeometryReader { proxy in
-                GeometryReader { proxy in
+                ZStack(alignment: .bottom) {
                     KFImage(viewModel.imageURL)
                         .resizable()
                         .frame(width: proxy.size.width, height: proxy.size.height)
                         .cornerRadius(16)
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    .black.opacity(0),
+                                    .black.opacity(0.25),
+                                    .black.opacity(0.5),
+                                    .black.opacity(0.75),
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .clipShape(
+                            RoundedCorner(radius: 16, corners: [.bottomLeft, .bottomRight])
+                        )
+                        .frame(width: proxy.size.width, height: proxy.size.height/4)
+                    HStack(spacing: 0) {
+                        Image(viewModel.icon)
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                            .padding(8)
+                        Spacer()
+                    }
+                    .frame(width: proxy.size.width)
                 }
             }
             .aspectRatio(1, contentMode: .fit)

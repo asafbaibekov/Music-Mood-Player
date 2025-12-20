@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 protocol PlaylistCellViewModelProtocol: Identifiable, Equatable {
     
@@ -16,6 +17,8 @@ protocol PlaylistCellViewModelProtocol: Identifiable, Equatable {
     var subtitle: String? { get }
     
     var imageURL: URL? { get }
+    
+    var icon: ImageResource { get }
 }
 
 struct PlaylistCellViewModel: PlaylistCellViewModelProtocol {
@@ -27,4 +30,6 @@ struct PlaylistCellViewModel: PlaylistCellViewModelProtocol {
     let subtitle: String?
     
     let imageURL: URL?
+    
+    let icon: ImageResource
 }

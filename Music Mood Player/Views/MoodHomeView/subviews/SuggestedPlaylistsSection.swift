@@ -61,9 +61,9 @@ struct SuggestedPlaylistsSection: View {
 
 #Preview {
     let playlistCellViewModels: [PlaylistCellViewModel] = [
-        .init(title: "First Playlist", subtitle: "This is the first playlist in the list", imageURL: nil),
-        .init(title: "Second Playlist", subtitle: "This is the second playlist in the list", imageURL: nil),
-        .init(title: "Third Playlist", subtitle: "This is the third playlist in the list", imageURL: nil)
+        .init(title: "First Playlist", subtitle: "This is the first playlist in the list", imageURL: nil, icon: .spotify),
+        .init(title: "Second Playlist", subtitle: "This is the second playlist in the list", imageURL: nil, icon: .appleMusic),
+        .init(title: "Third Playlist", subtitle: "This is the third playlist in the list", imageURL: nil, icon: .youtubeMusic)
     ]
     SuggestedPlaylistsSection(playlistCellViewModels: playlistCellViewModels, bottomInset: 0)
 }

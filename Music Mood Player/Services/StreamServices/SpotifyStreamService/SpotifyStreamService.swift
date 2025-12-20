@@ -48,7 +48,7 @@ final class SpotifyStreamService: MusicStreamService {
         
         guard let playlistCellViewModels = self.currentSpotifyPlaylistsResponse?.items
             .map({ item in
-                PlaylistCellViewModel(title: item.name ?? "", subtitle: item.itemDescription ?? "", imageURL: item.images?.first?.url)
+                PlaylistCellViewModel(title: item.name, subtitle: item.itemDescription, imageURL: item.images?.first?.url, icon: item.icon)
             }) else { return [] }
         
         return playlistCellViewModels

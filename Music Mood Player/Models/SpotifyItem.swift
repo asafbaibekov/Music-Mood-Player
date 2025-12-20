@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct SpotifyItem: Codable, CustomStringConvertible, Identifiable, Equatable {
     
@@ -129,5 +130,9 @@ extension SpotifyItem: PlaylistCellViewModelProtocol {
     
     var imageURL: URL? {
         self.images?.first?.url
+    }
+    
+    var icon: ImageResource {
+        MusicService.spotify.imageResource
     }
 }
