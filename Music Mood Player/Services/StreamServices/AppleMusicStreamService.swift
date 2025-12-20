@@ -11,9 +11,7 @@ import Combine
 
 final class AppleMusicStreamService: MusicStreamService {
     
-    var name: String = "Apple Music"
-    
-    var icon: ImageResource = Icons.Custom.apple_music.imageResource
+    var musicService: MusicService { .appleMusic }
     
     private(set) lazy var isLoggedInPublisher: AnyPublisher<Bool, Never> = {
         self.isLoggedInSubject.eraseToAnyPublisher()
@@ -23,12 +21,12 @@ final class AppleMusicStreamService: MusicStreamService {
     
     func login() {
         self.isLoggedInSubject.value = true
-        print("\(name) logged in")
+        print("\(musicService.name) logged in")
     }
     
     func logout() {
         self.isLoggedInSubject.value = false
-        print("\(name) logged out")
+        print("\(musicService.name) logged out")
     }
     
     func loadPlaylists() async throws -> [any PlaylistCellViewModelProtocol] {

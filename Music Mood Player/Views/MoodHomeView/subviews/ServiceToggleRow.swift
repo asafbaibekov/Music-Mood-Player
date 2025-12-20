@@ -55,8 +55,8 @@ extension MoodHomeView {
         }
         
         init(_ service: any MusicStreamService) {
-            self.name = service.name
-            self.icon = service.icon
+            self.name = service.musicService.name
+            self.icon = service.musicService.imageResource
             self.service = service
         }
         

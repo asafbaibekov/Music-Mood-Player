@@ -13,9 +13,7 @@ import UIKit
 
 final class SpotifyStreamService: MusicStreamService {
     
-    var name: String = "Spotify"
-    
-    var icon: ImageResource = Icons.Custom.spotify.imageResource
+    var musicService: MusicService { .spotify }
     
     let isLoggedInPublisher: AnyPublisher<Bool, Never>
     

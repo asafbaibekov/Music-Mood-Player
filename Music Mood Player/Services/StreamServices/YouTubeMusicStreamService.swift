@@ -11,9 +11,7 @@ import Combine
 
 final class YouTubeMusicStreamService: MusicStreamService {
     
-    var name: String = "Youtube Music"
-    
-    var icon: ImageResource = Icons.Custom.youtube_music.imageResource
+    var musicService: MusicService { .youtubeMusic }
     
     private(set) lazy var isLoggedInPublisher: AnyPublisher<Bool, Never> = {
         self.isLoggedInSubject.eraseToAnyPublisher()
@@ -23,12 +21,12 @@ final class YouTubeMusicStreamService: MusicStreamService {
     
     func login() {
         self.isLoggedInSubject.value = true
-        print("\(name) logged in")
+        print("\(musicService.name) logged in")
     }
     
     func logout() {
         self.isLoggedInSubject.value = false
-        print("\(name) logged out")
+        print("\(musicService.name) logged out")
     }
     
     func loadPlaylists() async throws -> [any PlaylistCellViewModelProtocol] {

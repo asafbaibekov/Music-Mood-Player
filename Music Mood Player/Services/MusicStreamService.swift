@@ -13,9 +13,7 @@ protocol MusicStreamService: Identifiable {
     
     var id: UUID { get }
     
-    var name: String { get }
-    
-    var icon: ImageResource { get }
+    var musicService: MusicService { get }
     
     var isLoggedInPublisher: AnyPublisher<Bool, Never> { get }
     
