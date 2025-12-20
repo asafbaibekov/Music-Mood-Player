@@ -28,6 +28,8 @@ protocol MoodHomeViewModelProtocol: ObservableObject {
     var moods: [Mood] { get }
     
     var musicStreamServices: [any MusicStreamService] { get }
+    
+    func loadPlaylists()
 }
 
 @MainActor
@@ -73,12 +75,7 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
             })
             .compactMap({ $0 })
             .sink(receiveValue: { [weak self] _ in
-                Task { [weak self] in
-                    let viewModels = await self?.loadPlaylists()
-                    await MainActor.run { [weak self] in
-                        self?.playlistCellViewModels += viewModels ?? []
-                    }
-                }
+                self?.loadPlaylists()
             })
             .store(in: &cancellables)
         
@@ -89,6 +86,18 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
             })
             .store(in: &cancellables)
     }
+    
+    func loadPlaylists() {
+        Task { [weak self] in
+            let viewModels = await self?.loadPlaylists()
+            await MainActor.run { [weak self] in
+                self?.playlistCellViewModels += viewModels ?? []
+            }
+        }
+    }
+}
+
+private extension MoodHomeViewModel {
     
     func loadPlaylists() async -> [any PlaylistCellViewModelProtocol] {
         let results = await withTaskGroup(of: Result<[any PlaylistCellViewModelProtocol], Error>.self) { [weak self] group in

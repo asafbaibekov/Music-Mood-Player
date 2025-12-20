@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 struct SuggestedPlaylistsSection: View {
     
@@ -13,7 +14,9 @@ struct SuggestedPlaylistsSection: View {
     
     private(set) var bottomInset: CGFloat?
     
-    var onSwipeDown: (() -> Void)? = nil
+    var onSwipeDown: (() -> Void)?
+    
+    var onLastPresented: (() -> Void)?
     
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 16), GridItem(.flexible())
@@ -27,6 +30,12 @@ struct SuggestedPlaylistsSection: View {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(self.playlistCellViewModels, id: \.id) { playlistCellViewModel in
                     PlaylistCell(viewModel: playlistCellViewModel)
+                        .onAppear {
+                            let last = playlistCellViewModels.last
+                            let isLast = last?.asAnyEquatable() == playlistCellViewModel.asAnyEquatable()
+                            guard isLast else { return }
+                            self.onLastPresented?()
+                        }
                 }
             }
             .padding(.bottom, bottomInset)
