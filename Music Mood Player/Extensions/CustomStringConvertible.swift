@@ -24,7 +24,7 @@ extension CustomStringConvertible {
             case let some as String:
                 stringValue = "\"\(some)\""
             case let some as URL:
-                stringValue = "\"URL(string: \(some.absoluteString))\""
+                stringValue = "URL(string: \"\(some.absoluteString)\")"
             case let some as Optional<Any>:
                 stringValue = "\(some ?? "nil")"
             default:
