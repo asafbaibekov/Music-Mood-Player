@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>GIDClientID</key>
+	<string>370521977232-g5hr4p191tmodiqhns8j5qmp0mfjepch.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -10,6 +12,12 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>musicmoodplayer</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.370521977232-g5hr4p191tmodiqhns8j5qmp0mfjepch</string>
 			</array>
 		</dict>
 	</array>

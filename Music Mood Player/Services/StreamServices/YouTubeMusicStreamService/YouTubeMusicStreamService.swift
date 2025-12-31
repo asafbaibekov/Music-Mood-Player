@@ -8,25 +8,30 @@
 import Foundation
 import SwiftUI
 import Combine
+import GoogleSignIn
 
 final class YouTubeMusicStreamService: MusicStreamService {
     
     var musicService: MusicService { .youtubeMusic }
     
-    private(set) lazy var isLoggedInPublisher: AnyPublisher<Bool, Never> = {
-        self.isLoggedInSubject.eraseToAnyPublisher()
-    }()
+    let isLoggedInPublisher: AnyPublisher<Bool, Never>
     
-    private let isLoggedInSubject = CurrentValueSubject<Bool, Never>(false)
+    private let youtubeMusicAuthManager = YoutubeMusicAuthManager()
+    
+    init() {
+        self.isLoggedInPublisher = youtubeMusicAuthManager.isLoggedInPublisher
+    }
+    
+    func handleURL(googleURL url: URL) {
+        self.youtubeMusicAuthManager.handleURL(googleURL: url)
+    }
     
     func login() {
-        self.isLoggedInSubject.value = true
-        print("\(musicService.name) logged in")
+        self.youtubeMusicAuthManager.login()
     }
     
     func logout() {
-        self.isLoggedInSubject.value = false
-        print("\(musicService.name) logged out")
+        self.youtubeMusicAuthManager.logout()
     }
     
     func loadPlaylists() async throws -> [any PlaylistCellViewModelProtocol] {

@@ -11,13 +11,16 @@ import SwiftUI
 struct MusicMoodPlayerApp: App {
     
     let spotifyService: SpotifyStreamService
+    let youtubeMusicSerivce: YouTubeMusicStreamService
     
     let viewModel: MoodHomeViewModel
     
     init() {
         self.spotifyService = SpotifyStreamService(sessionStorable: SpotifySessionStorable().eraseToAnyStorable())
+        self.youtubeMusicSerivce = YouTubeMusicStreamService()
         self.viewModel = MoodHomeViewModel(musicStreamServices: [
-            spotifyService
+            spotifyService,
+            youtubeMusicSerivce
         ])
     }
     
@@ -36,7 +39,7 @@ private extension MusicMoodPlayerApp {
         case "spotify-login-callback":
             spotifyService.handleURL(spotifyURL: url)
         default:
-            break
+            youtubeMusicSerivce.handleURL(googleURL: url)
         }
     }
 }
