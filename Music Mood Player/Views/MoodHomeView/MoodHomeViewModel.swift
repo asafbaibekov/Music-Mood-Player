@@ -55,14 +55,7 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
     
     private var cancellables = Set<AnyCancellable>()
     
-    let moods: [Mood] = [
-        Mood(emoji: "😀", label: "Happy"),
-        Mood(emoji: "😢", label: "Sad"),
-        Mood(emoji: "😡", label: "Angry"),
-        Mood(emoji: "😴", label: "Chill"),
-        Mood(emoji: "🤩", label: "Excited"),
-        Mood(emoji: "🤔", label: "Thoughtful")
-    ]
+    let moods: [Mood] = Mood.allCases
     
     let musicStreamServices: [any MusicStreamService]
     

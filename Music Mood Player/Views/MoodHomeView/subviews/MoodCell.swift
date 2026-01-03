@@ -30,7 +30,7 @@ extension MoodHomeView {
                     Text(mood?.emoji ?? "")
                         .font(.system(size: 34))
                 }
-                Text(mood?.label ?? "")
+                Text(mood?.title ?? "")
                     .font(.system(size: 14))
                     .foregroundColor(.primary.opacity(0.9))
             }
@@ -45,20 +45,11 @@ extension MoodHomeView {
     
     HStack(spacing: 0) {
         Spacer()
-        MoodHomeView<MoodHomeViewModel>.MoodCell(
-            mood: Mood(emoji: "🙂", label: "Happy"),
-            selectedMood: $selectedMood
-        )
+        MoodHomeView<MoodHomeViewModel>.MoodCell(mood: .happy, selectedMood: $selectedMood)
         Spacer()
-        MoodHomeView<MoodHomeViewModel>.MoodCell(
-            mood: Mood(emoji: "😢", label: "Sad"),
-            selectedMood: $selectedMood
-        )
+        MoodHomeView<MoodHomeViewModel>.MoodCell(mood: .sad, selectedMood: $selectedMood)
         Spacer()
-        MoodHomeView<MoodHomeViewModel>.MoodCell(
-            mood: Mood(emoji: "😡", label: "Angry"),
-            selectedMood: $selectedMood
-        )
+        MoodHomeView<MoodHomeViewModel>.MoodCell(mood: .angry, selectedMood: $selectedMood)
         Spacer()
     }
     .frame(maxWidth: .infinity)
