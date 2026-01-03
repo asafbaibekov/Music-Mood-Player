@@ -17,9 +17,13 @@ final class YouTubeMusicStreamService: MusicStreamService {
     let isLoggedInPublisher: AnyPublisher<Bool, Never>
     
     private let youtubeMusicAuthManager = YoutubeMusicAuthManager()
+    private let youtubeMusicRequestManager: YoutubeMusicRequestManager
+    private var currentResponse: YoutubeMusicPlaylistsResponse?
+    private var seenPlaylistIds = Set<String>()
     
     init() {
         self.isLoggedInPublisher = youtubeMusicAuthManager.isLoggedInPublisher
+        self.youtubeMusicRequestManager = YoutubeMusicRequestManager(youtubeMusicAuthManager: youtubeMusicAuthManager)
     }
     
     func handleURL(googleURL url: URL) {
@@ -35,6 +39,32 @@ final class YouTubeMusicStreamService: MusicStreamService {
     }
     
     func loadPlaylists() async throws -> [any PlaylistCellViewModelProtocol] {
-        return []
+        let url = URL(string: "https://www.googleapis.com/youtube/v3/search")!
+        
+        var params = [
+            URLQueryItem(name: "part", value: "snippet"),
+            URLQueryItem(name: "type", value: "playlist"),
+            URLQueryItem(name: "maxResults", value: "5"),
+            URLQueryItem(name: "order", value: "date"),
+            URLQueryItem(name: "safeSearch", value: "moderate"),
+            URLQueryItem(name: "q", value: "sad")
+        ]
+        
+        if let nextPageToken = currentResponse?.nextPageToken {
+            params.append(URLQueryItem(name: "pageToken", value: nextPageToken))
+        } else if currentResponse != nil {
+            return []
+        }
+        
+        let response = try await self.youtubeMusicRequestManager.performRequest(url: url, params: params)
+        self.currentResponse = response
+        
+        return response.items.filter { item in
+            if seenPlaylistIds.contains(item.id) {
+                return false
+            }
+            seenPlaylistIds.insert(item.id)
+            return true
+        }
     }
 }

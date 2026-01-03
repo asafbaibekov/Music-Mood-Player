@@ -91,7 +91,7 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
         Task { [weak self] in
             let viewModels = await self?.loadPlaylists()
             await MainActor.run { [weak self] in
-                self?.playlistCellViewModels += viewModels ?? []
+                self?.playlistCellViewModels += viewModels?.shuffled() ?? []
             }
         }
     }
