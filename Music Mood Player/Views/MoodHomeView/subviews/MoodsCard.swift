@@ -12,7 +12,6 @@ extension MoodHomeView {
     struct MoodsCard: View {
         let moods: [Mood]
         
-        @Binding var isShowPlaylists: Bool
         @Binding var selectedMood: Mood?
         @Binding var isHidding: Bool
         

@@ -8,6 +8,19 @@
 import SwiftUI
 import Combine
 
+enum ContentState: Equatable {
+    case noneLoggedIn
+    case unselectedMood
+    case showPlaylists(Mood)
+    
+    var isShowPlaylists: Bool {
+        if case .showPlaylists = self {
+            return true
+        }
+        return false
+    }
+}
+
 @MainActor
 protocol MoodHomeViewModelProtocol: ObservableObject {
     
@@ -15,7 +28,7 @@ protocol MoodHomeViewModelProtocol: ObservableObject {
     
     var isCameraHidden: Bool { get set }
     
-    var isShowPlaylists: Bool { get set }
+    var contentState: ContentState { get set }
     
     var isDetecting: Bool { get set }
     
@@ -39,7 +52,7 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
     
     @Published var isCameraHidden: Bool = false
     
-    @Published var isShowPlaylists: Bool = false
+    @Published var contentState: ContentState = .noneLoggedIn
     
     @Published var isDetecting: Bool = false
     
@@ -62,21 +75,36 @@ final class MoodHomeViewModel: MoodHomeViewModelProtocol {
     init(musicStreamServices: [any MusicStreamService]) {
         self.musicStreamServices = musicStreamServices
         
-        $selectedMood
-            .handleEvents(receiveOutput: { [weak self] in
-                self?.isShowPlaylists = $0 != nil
-            })
-            .compactMap({ $0 })
-            .sink(receiveValue: { [weak self] _ in
-                self?.loadPlaylists()
-            })
-            .store(in: &cancellables)
-        
         cameraViewModel
             .$cameraStatus
             .sink(receiveValue: { [weak self] cameraStatus in
                 self?.isCameraHidden = cameraStatus != .running
             })
+            .store(in: &cancellables)
+        
+        let isNoneLoggedInPublisher: AnyPublisher<Bool, Never> = musicStreamServices
+            .map(\.isLoggedInPublisher)
+            .reduce(Just([]).eraseToAnyPublisher()) { acc, next in
+                acc.combineLatest(next, { $0 + [$1] }).eraseToAnyPublisher()
+            }
+            .map({ !$0.contains(true) })
+            .eraseToAnyPublisher()
+        
+        isNoneLoggedInPublisher
+            .combineLatest($selectedMood) { isNoneLoggedIn, mood -> ContentState in
+                if isNoneLoggedIn {
+                    return .noneLoggedIn
+                } else if let mood {
+                    return .showPlaylists(mood)
+                }
+                return .unselectedMood
+            }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] contentState in
+                self?.contentState = contentState
+                guard case .showPlaylists = contentState else { return }
+                self?.loadPlaylists()
+            }
             .store(in: &cancellables)
     }
     

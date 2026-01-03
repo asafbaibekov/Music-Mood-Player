@@ -27,7 +27,12 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                 ZStack {
                     GeometryReader { screenProxy in
                         let screenHeight = screenProxy.size.height
-                        if viewModel.isShowPlaylists {
+                        switch viewModel.contentState {
+                        case .noneLoggedIn:
+                            EmptyView()
+                        case .unselectedMood:
+                            EmptyView()
+                        case .showPlaylists(let mood):
                             SuggestedPlaylistsSection(
                                 playlistCellViewModels: self.viewModel.playlistCellViewModels,
                                 bottomInset: self.peekHeight + 24,
@@ -44,7 +49,6 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                         }
                         MoodsCard(
                             moods: viewModel.moods,
-                            isShowPlaylists: $viewModel.isShowPlaylists,
                             selectedMood: $viewModel.selectedMood,
                             isHidding: $isCardClosed,
                             onTapHeader: {
@@ -74,7 +78,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                         self.viewModel.isDetecting = false
                     }
                 }
-                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: self.viewModel.isShowPlaylists)
+                .animation(.spring(response: 0.4, dampingFraction: 0.7), value: self.viewModel.contentState.isShowPlaylists)
             }
         }
     }
@@ -122,7 +126,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     var dragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
-                guard viewModel.isShowPlaylists else { return }
+                guard viewModel.contentState.isShowPlaylists else { return }
                 guard value.translation.height > 50 else { return }
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                     isCardClosed = true
