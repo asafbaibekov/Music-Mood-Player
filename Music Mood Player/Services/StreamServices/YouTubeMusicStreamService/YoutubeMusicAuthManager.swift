@@ -58,6 +58,7 @@ class YoutubeMusicAuthManager {
     
     func logout() {
         GIDSignIn.sharedInstance.signOut()
+        self.user = nil
         isLoggedInSubject.send(false)
     }
 }
