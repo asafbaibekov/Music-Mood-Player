@@ -44,7 +44,11 @@ final class SpotifyStreamService: MusicStreamService {
     }
     
     func loadPlaylists() async throws -> [any PlaylistCellViewModelProtocol] {
-        self.currentSpotifyPlaylistsResponse = try await loadNextPage()
+        if let response = try await loadNextPage() {
+            self.currentSpotifyPlaylistsResponse = response
+        } else {
+            return []
+        }
         
         guard let playlistCellViewModels = self.currentSpotifyPlaylistsResponse?.items
             .map({ item in
@@ -59,16 +63,16 @@ private extension SpotifyStreamService {
     
     func loadNextPage() async throws -> SpotifyPlaylistsResponse? {
         
-        if let currentResponse = self.currentSpotifyPlaylistsResponse {
-            let next = currentResponse.next
+        if let next = self.currentSpotifyPlaylistsResponse?.next {
             return try await self.spotifyRequestManager.performRequest(urlType: .url(next), params: [])
-        } else {
-            let params = [
-                URLQueryItem(name: "q", value: "genre:\"rock\""),
-                URLQueryItem(name: "type", value: "playlist"),
-                URLQueryItem(name: "limit", value: "5")
-            ]
-            return try await self.spotifyRequestManager.performRequest(urlType: .endpoint(.search), params: params)
+        } else if self.currentSpotifyPlaylistsResponse != nil {
+            return nil
         }
+        let params = [
+            URLQueryItem(name: "q", value: "genre:\"rock\""),
+            URLQueryItem(name: "type", value: "playlist"),
+            URLQueryItem(name: "limit", value: "5")
+        ]
+        return try await self.spotifyRequestManager.performRequest(urlType: .endpoint(.search), params: params)
     }
 }
