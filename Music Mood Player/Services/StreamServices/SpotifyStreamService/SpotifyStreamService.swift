@@ -44,11 +44,9 @@ final class SpotifyStreamService: MusicStreamService {
     }
     
     func loadPlaylists() async throws -> [any PlaylistCellViewModelProtocol] {
-        if let response = try await loadNextPage() {
-            self.currentSpotifyPlaylistsResponse = response
-            return self.currentSpotifyPlaylistsResponse?.items ?? []
-        }
-        return []
+        guard let response = try await loadNextPage() else { return [] }
+        self.currentSpotifyPlaylistsResponse = response
+        return self.currentSpotifyPlaylistsResponse?.items ?? []
     }
 }
 
