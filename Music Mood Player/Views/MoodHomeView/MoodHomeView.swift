@@ -27,25 +27,29 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                 ZStack {
                     GeometryReader { screenProxy in
                         let screenHeight = screenProxy.size.height
-                        switch viewModel.contentState {
-                        case .noneLoggedIn:
-                            EmptyView()
-                        case .unselectedMood:
-                            EmptyView()
-                        case .showPlaylists(let mood):
-                            SuggestedPlaylistsSection(
-                                playlistCellViewModels: self.viewModel.playlistCellViewModels,
-                                bottomInset: self.peekHeight + 24,
-                                onSwipeDown: {
-                                    guard !isCardClosed else { return }
-                                    withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-                                        isCardClosed = true
+                        ZStack {
+                            switch viewModel.contentState {
+                            case .noneLoggedIn:
+                                MessageView(for: .login)
+                                    .frame(height: max(0, screenHeight - cardHeight))
+                            case .unselectedMood:
+                                MessageView(for: .detection)
+                                    .frame(height: max(0, screenHeight - cardHeight))
+                            case .showPlaylists(let mood):
+                                SuggestedPlaylistsSection(
+                                    playlistCellViewModels: self.viewModel.playlistCellViewModels,
+                                    bottomInset: self.peekHeight + 24,
+                                    onSwipeDown: {
+                                        guard !isCardClosed else { return }
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                                            isCardClosed = true
+                                        }
+                                    },
+                                    onLastPresented: {
+                                        self.viewModel.loadPlaylists()
                                     }
-                                },
-                                onLastPresented: {
-                                    self.viewModel.loadPlaylists()
-                                }
-                            )
+                                )
+                            }
                         }
                         MoodsCard(
                             moods: viewModel.moods,
@@ -133,11 +137,106 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                 }
             }
     }
+    
+    @ViewBuilder
+    func MessageView(for state: ButtonState) -> some View {
+        VStack(alignment: .center, spacing: 16) {
+            Circle()
+                .fill(.selectedEmojiBg)
+                .overlay(
+                    Image(systemName: "music.note.list")
+                        .resizable()
+                        .foregroundColor(.detectButtonBg)
+                        .frame(width: 24, height: 24)
+                )
+                .frame(width: 48, height: 48)
+            VStack(alignment: .center, spacing: 4) {
+                Text("No playlists yet")
+                    .fontWeight(.semibold)
+                Text("Pick a mood or let us detect it for you")
+                    .fontWeight(.medium)
+                    .foregroundStyle(.gray)
+            }
+            switch state {
+            case .login:
+                Menu(
+                    content: {
+                        Text("Login / Logout")
+                        ForEach(viewModel.musicStreamServices, id: \.id) { musicStreamService in
+                            ServiceToggleRow(service: musicStreamService)
+                        }
+                    },
+                    label: {
+                        makeButtonLabel(for: state)
+                    }
+                )
+            case .detection:
+                Button(
+                    action: {
+                        viewModel.isDetecting.toggle()
+                    },
+                    label: {
+                        makeButtonLabel(for: state)
+                    }
+                )
+            }
+            
+        }
+        .frame(maxWidth: .infinity)
+    }
+    
+    func makeButtonLabel(for state: ButtonState) -> some View {
+        let view = Label(
+            title: { Text(state.title).font(.system(size: 20, weight: .semibold)) },
+            icon: { state.icon.image.resizable().frame(width: 28, height: 28) }
+        )
+        .padding(.vertical, 14)
+        .padding(.horizontal, 24)
+        
+        if #available(iOS 26.0, *) {
+            return view
+                .foregroundStyle(.white)
+                .glassEffect(.clear.tint(state.backgroundColor))
+        }
+        return RoundedByShortSide(content: {
+            view
+                .foregroundStyle(.white)
+                .background(state.backgroundColor)
+                .background(Material.ultraThick)
+        })
+    }
+    
+    enum ButtonState {
+        case login
+        case detection
+        
+        var title: String {
+            switch self {
+            case .login: "Settings"
+            case .detection: "Detect Mood"
+            }
+        }
+        
+        var icon: Icons.System {
+            switch self {
+            case .login: .gear
+            case .detection: .faceid
+            }
+        }
+        
+        var backgroundColor: Color {
+            switch self {
+            case .login: .gray.opacity(0.75)
+            case .detection: .detectButtonBg
+            }
+        }
+    }
 }
 
 #Preview {
     let viewModel = MoodHomeViewModel(musicStreamServices: [
-        SpotifyStreamService(sessionStorable: SpotifySessionStorable().eraseToAnyStorable())
+        SpotifyStreamService(sessionStorable: SpotifySessionStorable().eraseToAnyStorable()),
+        YouTubeMusicStreamService()
     ])
     MoodHomeView(viewModel: viewModel)
 }

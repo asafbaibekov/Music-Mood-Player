@@ -18,6 +18,10 @@ enum Icons {
         var body: some View {
             Image(systemName: self.rawValue)
         }
+        
+        var image: Image {
+            body as! Image
+        }
     }
     
     enum Custom: String, View {
