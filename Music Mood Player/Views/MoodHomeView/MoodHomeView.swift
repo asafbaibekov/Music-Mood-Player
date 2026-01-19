@@ -17,6 +17,8 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     
     @State private var cardHeight: CGFloat = 0
     
+    @State private var contentState: ContentState? = .noneLoggedIn
+    
     private let peekHeight: CGFloat = 38
     
     var body: some View {
@@ -28,7 +30,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                     GeometryReader { screenProxy in
                         let screenHeight = screenProxy.size.height
                         ZStack {
-                            switch viewModel.contentState {
+                            switch self.contentState {
                             case .noneLoggedIn:
                                 MessageView(for: .login)
                                     .frame(height: max(0, screenHeight - cardHeight))
@@ -49,8 +51,25 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                                         self.viewModel.loadPlaylists()
                                     }
                                 )
+                            case .none:
+                                EmptyView()
                             }
                         }
+                        .opacity(contentState != nil ? 1 : 0)
+                        .onChange(of: viewModel.contentState) { _, newState in
+                            withAnimation(.easeOut(duration: 0.2)) {
+                                self.contentState = nil
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                withAnimation(.easeIn(duration: 0.25)) {
+                                    self.contentState = newState
+                                }
+                            }
+                        }
+                        .onAppear {
+                            self.contentState = viewModel.contentState
+                        }
+                        
                         MoodsCard(
                             moods: viewModel.moods,
                             selectedMood: $viewModel.selectedMood,
