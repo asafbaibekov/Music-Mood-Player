@@ -107,7 +107,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     }
     
     @ToolbarContentBuilder
-    func toolbarContent() -> some ToolbarContent {
+    private func toolbarContent() -> some ToolbarContent {
         
         ToolbarItem(placement: .topBarLeading) {
             Menu {
@@ -146,7 +146,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
         }
     }
     
-    var dragGesture: some Gesture {
+    private var dragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
                 guard viewModel.contentState.isShowPlaylists else { return }
@@ -158,7 +158,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
     }
     
     @ViewBuilder
-    func MessageView(for state: ButtonState) -> some View {
+    private func MessageView(for state: ButtonState) -> some View {
         VStack(alignment: .center, spacing: 16) {
             Circle()
                 .fill(.selectedEmojiBg)
@@ -204,7 +204,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
         .frame(maxWidth: .infinity)
     }
     
-    func makeButtonLabel(for state: ButtonState) -> some View {
+    private func makeButtonLabel(for state: ButtonState) -> some View {
         let view = Label(
             title: { Text(state.title).font(.system(size: 20, weight: .semibold)) },
             icon: { state.icon.image.resizable().frame(width: 28, height: 28) }
@@ -225,7 +225,7 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
         })
     }
     
-    enum ButtonState {
+    private enum ButtonState {
         case login
         case detection
         
