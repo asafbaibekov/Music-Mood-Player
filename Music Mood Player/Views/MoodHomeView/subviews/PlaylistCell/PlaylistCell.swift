@@ -13,7 +13,7 @@ struct PlaylistCell: View {
     let viewModel: any PlaylistCellViewModelProtocol
     
     var body: some View {
-        VStack(alignment: .leading) {
+        HStack(alignment: .top) {
             GeometryReader { proxy in
                 ZStack(alignment: .bottom) {
                     KFImage(viewModel.imageURL)
@@ -48,22 +48,24 @@ struct PlaylistCell: View {
                 }
             }
             .aspectRatio(1, contentMode: .fit)
-            
-            Text(viewModel.title ?? "")
-                .font(.system(size: 16, weight: .semibold))
-                .lineLimit(1)
-                .padding(.horizontal, 4)
-            Text(viewModel.subtitle ?? "")
-                .font(.system(size: 14, weight: .semibold))
-                .minimumScaleFactor(0.9)
-                .lineLimit(1)
-                .foregroundStyle(Color.gray)
-                .padding(.horizontal, 4)
+            VStack(alignment: .leading) {
+                Text(viewModel.title ?? "")
+                    .font(.system(size: 16, weight: .semibold))
+                    .lineLimit(1)
+                
+                Text(viewModel.subtitle ?? "")
+                    .font(.system(size: 14, weight: .semibold))
+                    .minimumScaleFactor(0.9)
+                    .foregroundStyle(Color.gray)
+            }
+            .padding(.vertical, 8)
+            Spacer()
         }
+        .frame(height: 100)
+        .frame(maxWidth: .infinity)
     }
 }
 
 #Preview {
     PlaylistCell(viewModel: SpotifyItem.example)
-        .frame(width: 200)
 }

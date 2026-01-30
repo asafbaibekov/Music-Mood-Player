@@ -40,7 +40,6 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                             case .showPlaylists(let mood):
                                 SuggestedPlaylistsSection(
                                     playlistCellViewModels: self.viewModel.playlistCellViewModels,
-                                    bottomInset: self.peekHeight + 24,
                                     onSwipeDown: {
                                         guard !isCardClosed else { return }
                                         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
