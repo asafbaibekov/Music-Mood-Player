@@ -16,17 +16,21 @@ struct SuggestedPlaylistsSection: View {
     
     var onLastPresented: (() -> Void)?
     
+    var onSelect: ((any PlaylistCellViewModelProtocol) -> Void)?
+    
     private let columns: [GridItem] = [
         GridItem(.flexible(), spacing: 16), GridItem(.flexible())
     ]
     
     @State private var dragStartY: CGFloat?
     @State private var isDragging: Bool = false
+    @State private var selection: (String)?
     
     var body: some View {
-        List {
+        List(selection: $selection) {
             ForEach(self.playlistCellViewModels, id: \.id) { playlistCellViewModel in
                 PlaylistCell(viewModel: playlistCellViewModel)
+                    .tag(playlistCellViewModel.id)
                     .onAppear {
                         let last = playlistCellViewModels.last
                         let isLast = last?.asAnyEquatable() == playlistCellViewModel.asAnyEquatable()
@@ -35,6 +39,14 @@ struct SuggestedPlaylistsSection: View {
                     }
             }
         }
+        .onChange(of: selection, { _, newValue in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                withAnimation { selection = nil }
+            }
+            guard let newValue, let onSelect else { return }
+            guard let viewModel = playlistCellViewModels.first(where: { $0.id == newValue }) else { return }
+            onSelect(viewModel)
+        })
         .onScrollGeometryChange(
             for: CGFloat.self,
             of: { geometry in

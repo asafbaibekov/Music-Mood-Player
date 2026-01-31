@@ -48,6 +48,9 @@ struct MoodHomeView<ViewModel: MoodHomeViewModelProtocol>: View {
                                     },
                                     onLastPresented: {
                                         self.viewModel.loadPlaylists()
+                                    },
+                                    onSelect: { playlistCellViewModel in
+                                        
                                     }
                                 )
                             case .none:
